@@ -7,7 +7,23 @@ import numpy as np
 # Task 1:   Implement some kind of noticeable image manipulation in this function
 #           e.g. channel manipulation, filter you already know, drawings on the image etc.
 def myFirstImageManipulation(img):
-    result = img.copy()
+    # Copy the image to avoid changing the original image
+    # This could be removed, depending on the use case
+    result = img.copy() 
+    
+    # Draw a white rectangle and a black circle on the image
+    #                      start point, end point, color, thickness
+    cv2.rectangle(result, (10, 10), (100, 100), (255, 255, 255), 3)
+    cv2.circle(result, (200, 200), 20, (0, 0, 0), 2)
+    
+    # Add text to the image
+    #                 text, start point, font, font size, color, thickness
+    cv2.putText(result, "Hello Pixel-Power!", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+    
+    # Apply a blurry filter to the image
+    #                                   kernel size, sigma
+    result = cv2.GaussianBlur(result, (15, 15), 0)
+    
     return result
 
 
