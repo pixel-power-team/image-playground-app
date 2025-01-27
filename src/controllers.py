@@ -34,11 +34,12 @@ class MainController():
         self.logger.info('Image loaded: '+str)
 
     def saveImage(self, str):
-        cv2.imwrite(str, self._model.image)
+        img = cv2.cvtColor(self._model.image,
+                           cv2.COLOR_BGR2RGB)  # Make sure to convert back to RGB before saving
+        cv2.imwrite(str, img)
         self.logger.info('Image written to: '+str)
 
 
-    #
     def changeImage(self):
         image = np.zeros((256, 256, 3), np.uint8)
         image[0:256 // 2, :] = (255, 0, 0)
