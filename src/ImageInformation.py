@@ -45,5 +45,15 @@ def getPixelColor(img):
 #           the separate image need three channels
 #
 def returnChannel(img, channel):
-    result = img.copy()
-    return result
+    # split channels
+    b, g, r = cv2.split(img)
+    match channel:
+        case 0:
+            return cv2.merge((b, np.zeros_like(g), np.zeros_like(r)))
+        case 1:
+            return cv2.merge((np.zeros_like(b), g, np.zeros_like(r)))
+        case 2:
+            return cv2.merge((np.zeros_like(b), np.zeros_like(g), r))
+        case _:
+            return img
+    
