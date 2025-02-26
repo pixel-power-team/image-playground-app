@@ -35,7 +35,6 @@ def myFirstImageManipulation(img):
 #           Color of the first pixel in the second column
 #           This function should work for images with three channels
 
-
 def imageSize(img):
     width, height = img.shape[:2]
     print(f"Width: {width}, Height: {height}")
