@@ -35,16 +35,17 @@ def myFirstImageManipulation(img):
 #           Color of the first pixel in the second column
 #           This function should work for images with three channels
 
+
 def imageSize(img):
     width, height = img.shape[:2]
     print(f"Width: {width}, Height: {height}")
-    print(f"Color of the first pixel: {img[0][0]}")
-    print(f"Color of the first pixel in the second row: {img[1][0]}")
-    print(f"Color of the first pixel in the second column: {img[0][1]}")
+    print(f"Color of the first pixel: {getPixelColor(img[0][0])}")
+    print(f"Color of the first pixel in the second row: {getPixelColor(img[1][0])}")
+    print(f"Color of the first pixel in the second column: {getPixelColor(img[0][1])}")
     return [width, height]
 
-def getPixelColor(img):
-    return [[0,0], [255,255]]
+def getPixelColor(pixel):
+    return pixel.tolist()
 
 # Task 3:   Separate the given channels of a colour image in this function and return it as separate image
 #           the separate image need three channels
