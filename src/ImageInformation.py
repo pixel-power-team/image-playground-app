@@ -54,11 +54,11 @@ def returnChannel(img, channel):
     r, g, b = cv2.split(img)
     match channel:
         case 0:
-            return cv2.merge((b, np.zeros_like(g), np.zeros_like(r)))
+            return cv2.merge((r, np.zeros_like(g), np.zeros_like(b)))
         case 1:
-            return cv2.merge((np.zeros_like(b), g, np.zeros_like(r)))
+            return cv2.merge((np.zeros_like(r), g, np.zeros_like(b)))
         case 2:
-            return cv2.merge((np.zeros_like(b), np.zeros_like(g), r))
+            return cv2.merge((np.zeros_like(r), np.zeros_like(g), b))
         case _:
             return img
     
