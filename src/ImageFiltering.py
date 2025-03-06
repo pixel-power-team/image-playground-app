@@ -69,9 +69,6 @@ def createIntegralImage(img: np.ndarray):
     Returns:
         numpy.ndarray: Integral image.
     """
-    # Ensure the image is in float format to avoid overflow issues
-    img = img.astype(np.float32)
-
     # Create an array of the same size as the image, initialized with zeros
     integral_image = np.zeros_like(img, dtype=np.float32)
 
@@ -98,7 +95,7 @@ def applyMovingAverageFilterWithIntegralImage(img: np.ndarray, kSize: int):
     Applies a moving average filter using an integral image for efficiency.
 
     Args:
-        img (numpy.ndarray): Grayscale or single-channel image.
+        img (numpy.ndarray): Image to filter.
         kSize (int): Kernel size (w x w).
 
     Returns:
@@ -114,8 +111,8 @@ def applyMovingAverageFilterWithIntegralImage(img: np.ndarray, kSize: int):
     integral_image = createIntegralImage(img)
 
     # Determine padding size
-    # e.g. kSize = 3, pad = 1
-    pad = kSize // 2  # Half of kernel size (floor division)
+    # floor division e.g. kSize = 3, pad = 1
+    pad = kSize // 2  # Half of kernel size 
 
     # Get image dimensions
     h, w = img.shape
@@ -153,10 +150,10 @@ def applyMovingAverageFilterWithIntegralImage(img: np.ndarray, kSize: int):
 # 1D convolution along rows and columns
 def applyMovingAverageFilterWithSeperatedKernels(img, kSize):
     """
-    Applies a moving average filter using separable kernels without OpenCV.
+    Applies a moving average filter using separable kernels.
 
     Args:
-        img (numpy.ndarray): Grayscale or single-channel image.
+        img (numpy.ndarray): Image to filter.
         kSize (int): Kernel size (w x w).
 
     Returns:
@@ -196,12 +193,12 @@ def run_runtime_evaluation(img: np.ndarray):
     Evaluates and compares the runtime of different Moving Average filter implementations.
 
     Args:
-        img (numpy.ndarray): Grayscale or single-channel image.
+        img (numpy.ndarray): Image to filter.
 
     Plots the execution time for different kernel sizes (w).
     """
     # (start=3, stop=16, step=2) => w = 3, 5, 7, ..., 15
-    kernel_sizes = list(range(3, 16, 2))  # w = 3, 5, 7, ..., 15
+    kernel_sizes = list(range(3, 16, 2))
     methods = {
         "Naive Convolution": applyKernelInSpatialDomain,
         "Separable Kernels": applyMovingAverageFilterWithSeperatedKernels,
@@ -211,12 +208,12 @@ def run_runtime_evaluation(img: np.ndarray):
     runtimes = {method: [] for method in methods}
 
     for w in kernel_sizes:
-        for method_name, method in methods.items():
-            start_time = time.perf_counter()
+        for method_name, method in methods.items(): # Iterate over the methods
+            start_time = time.perf_counter() # Start the timer
             method(img, w)  # Apply the filter
-            end_time = time.perf_counter()
+            end_time = time.perf_counter() # Stop the timer
 
-            runtime = end_time - start_time
+            runtime = end_time - start_time # Compute the runtime
             runtimes[method_name].append(runtime)
 
     # Plot the results
