@@ -39,15 +39,20 @@ class MplWidget(QtWidgets.QWidget):
         self.canvas.ax.cla()
 
         histogram = self._controller.calculate_histogram(img)
-        color = ('b', 'g', 'r')
+        active_channels = [i for i, hist in enumerate(histogram) if
+                           any(hist)]  # Prüft, welche Kanäle nicht leer sind
 
-        if len(histogram) == 1:
-            color = ('b')
+        colors = ('r', 'g', 'b')
+        if len(active_channels) == 1:  # Falls nur ein Kanal vorhanden ist
+            colors = (colors[active_channels[
+                0]],)  # Nur die Farbe des aktiven Kanals behalten
 
-        for i, col in enumerate(color):
-            self.canvas.ax.plot(histogram[i], color=col)
+        for i, col in zip(active_channels, colors):
+            hist_norm = histogram[i] / max(
+                histogram[i])  # Normiere auf [0,1] Bereich
+            self.canvas.ax.plot(hist_norm, color=col)
             self.canvas.ax.set_xlim([0, 256])
-            #self.canvas.figure.set_size_inches(2,2)
+            self.canvas.ax.set_ylim([0, 1])  # Skalierung auf 0-1 setzen
 
         self.canvas.fig.tight_layout()
         self.canvas.draw()
