@@ -90,6 +90,8 @@ class MainView(QMainWindow):
         self._ui.pushButton_filter_movAvg_int.clicked.connect(self.on_filter_moving_avg_integral_button_clicked)
         self._ui.pushButton_filter_median.clicked.connect(self.on_filter_median_button_clicked)
         self._ui.pushButton_filter_evaluation.clicked.connect(self.on_runtime_evaluation_button_clicked)
+        self._ui.pushButton_filter_movAvg_sep.clicked.connect(self.on_filter_moving_avg_sep_button_clicked)
+        self._ui.pushButton_filter_movAvg_conv.clicked.connect(self.on_filter_moving_avg_conv_button_clicked)
 
 
         ####################################################################
@@ -298,6 +300,14 @@ class MainView(QMainWindow):
 
     def on_runtime_evaluation_button_clicked(self):
         self._main_controller.run_runtime_evaluation()
+        
+    def on_filter_moving_avg_sep_button_clicked(self):
+        self._main_controller.apply_moving_avg_filter_separated(self._ui.spinBox_filter_avg_size.value())
+        self.on_image_changed()
+        
+    def on_filter_moving_avg_conv_button_clicked(self):
+        self._main_controller.apply_moving_avg_filter_convolution(self._ui.spinBox_filter_avg_size.value())
+        self.on_image_changed()
 
 def convert_cv_qt(cv_img, display_width, display_height):
     """Convert from an opencv image to QPixmap"""
