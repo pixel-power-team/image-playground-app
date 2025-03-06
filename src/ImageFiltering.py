@@ -139,8 +139,41 @@ def applyMovingAverageFilterWithIntegralImage(img: np.ndarray, kSize: int):
 
 # Extra:
 def applyMovingAverageFilterWithSeperatedKernels(img, kSize):
-    filtered_img = img.copy()
-    return filtered_img
+    """
+    Applies a moving average filter using separable kernels without OpenCV.
+
+    Args:
+        img (numpy.ndarray): Grayscale or single-channel image.
+        kSize (int): Kernel size (w x w).
+
+    Returns:
+        numpy.ndarray: Filtered image.
+    """
+    # Ensure kSize is odd to keep symmetry
+    if kSize % 2 == 0:
+        raise ValueError("Kernel size must be odd.")
+
+    # Step 1: Apply 1D convolution along rows (horizontal pass)
+    img_horiz = np.zeros_like(img, dtype=np.float32)
+    pad = kSize // 2
+    h, w = img.shape
+
+    # Every pixel in the horizontal pass is the mean of a row slice
+    for i in range(h):
+        for j in range(w):
+            x1, x2 = max(0, j - pad), min(w - 1, j + pad) # Slice boundaries
+            img_horiz[i, j] = np.mean(img[i, x1:x2 + 1])  # Mean of row slice
+
+    # Step 2: Apply 1D convolution along columns (vertical pass)
+    img_blur = np.zeros_like(img_horiz, dtype=np.float32)
+
+    for j in range(w):
+        for i in range(h):
+            y1, y2 = max(0, i - pad), min(h - 1, i + pad)
+            img_blur[i, j] = np.mean(
+                img_horiz[y1:y2 + 1, j])  # Mean of column slice
+
+    return img_blur.astype(np.uint8)
 
 
 def run_runtime_evaluation(img: np.ndarray):
