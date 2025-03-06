@@ -47,7 +47,8 @@ def applyKernelInSpatialDomain(img, kernel):
 
 
 # Extra: create an integral image of the given image
-def createIntegralImage(img):
+# to speed up further calculations
+def createIntegralImage(img: np.ndarray):
     """
     Computes the integral image of the input image.
 
@@ -81,9 +82,59 @@ def createIntegralImage(img):
     return integral_image
 
 # Extra: apply the moving average filter by using an integral image
-def applyMovingAverageFilterWithIntegralImage(img, kSize):
-    filtered_img = img.copy()
-    return filtered_img
+def applyMovingAverageFilterWithIntegralImage(img: np.ndarray, kSize: int):
+    """
+    Applies a moving average filter using an integral image for efficiency.
+
+    Args:
+        img (numpy.ndarray): Grayscale or single-channel image.
+        kSize (int): Kernel size (w x w).
+
+    Returns:
+        numpy.ndarray: Filtered image.
+    """
+    # Ensure kSize is odd to have a centered kernel 
+    if kSize % 2 == 0:
+        raise ValueError("Kernel size must be odd.")
+
+    # Compute the integral image
+    integral_image = createIntegralImage(img)
+
+    # Determine padding size
+    # e.g. kSize = 3, pad = 1
+    pad = kSize // 2  # Half of kernel size (floor division) 
+
+    # Get image dimensions
+    h, w = img.shape
+
+    # Create output image
+    filtered_img = np.zeros_like(img, dtype=np.float32)
+
+    # Compute the moving average using the integral image
+    for i in range(h):
+        for j in range(w):
+            # Define top-left and bottom-right corners of the window
+            # Ensure the window is within the image boundaries by using max and min
+            x1, y1 = max(0, i - pad), max(0, j - pad) # (x1, y1) = top-left corner
+            x2, y2 = min(h - 1, i + pad), min(w - 1, j + pad) # (x2, y2) = bottom-right corner
+
+            # Sum over the rectangular region using the integral image
+            # This only requires 4 lookups in the integral image
+            region_sum = integral_image[x2, y2]
+            # Subtract the values outside the region
+            if x1 > 0:
+                region_sum -= integral_image[x1 - 1, y2] # Subtract the top region
+            if y1 > 0:
+                region_sum -= integral_image[x2, y1 - 1] # Subtract the left region
+            if x1 > 0 and y1 > 0:
+                region_sum += integral_image[
+                    x1 - 1, y1 - 1]  # Add the top-left region because it was subtracted twice
+
+            # Compute the mean value in the window
+            num_pixels = (x2 - x1 + 1) * (y2 - y1 + 1) # Number of pixels in the window
+            filtered_img[i, j] = region_sum / num_pixels # Compute the mean
+
+    return filtered_img.astype(np.uint8)  # Convert back to uint8
 
 
 # Extra:
