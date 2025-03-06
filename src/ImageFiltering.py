@@ -40,9 +40,20 @@ def createSobelYKernel():
     kernel = np.zeros((3, 3))
     return kernel
 
+# 2D convolution in spatial domain
+def applyKernelInSpatialDomain(img, kSize):
+    """
+    # Function will be implemented by Charlotte in Aufgabe 3 without using OpenCV (cv2)
+    """
+    img = Utilities.ensure_one_channel_grayscale_image(img)
+    
 
-def applyKernelInSpatialDomain(img, kernel):
-    filtered_img = img.copy()
+    # Create a moving average kernel (all values are equal to 1 / (kSize * kSize))
+    kernel = np.ones((kSize, kSize), np.float32) / (kSize * kSize)
+
+    # Apply the convolution using OpenCV (efficient implementation)
+    filtered_img = cv2.filter2D(img, -1, kernel, borderType=cv2.BORDER_REFLECT)
+
     return filtered_img
 
 
@@ -93,7 +104,9 @@ def applyMovingAverageFilterWithIntegralImage(img: np.ndarray, kSize: int):
     Returns:
         numpy.ndarray: Filtered image.
     """
-    # Ensure kSize is odd to have a centered kernel 
+    img = Utilities.ensure_one_channel_grayscale_image(img)
+
+    # Ensure kSize is odd to have a centered kernel
     if kSize % 2 == 0:
         raise ValueError("Kernel size must be odd.")
 
@@ -102,7 +115,7 @@ def applyMovingAverageFilterWithIntegralImage(img: np.ndarray, kSize: int):
 
     # Determine padding size
     # e.g. kSize = 3, pad = 1
-    pad = kSize // 2  # Half of kernel size (floor division) 
+    pad = kSize // 2  # Half of kernel size (floor division)
 
     # Get image dimensions
     h, w = img.shape
@@ -136,8 +149,8 @@ def applyMovingAverageFilterWithIntegralImage(img: np.ndarray, kSize: int):
 
     return filtered_img.astype(np.uint8)  # Convert back to uint8
 
-
 # Extra:
+# 1D convolution along rows and columns
 def applyMovingAverageFilterWithSeperatedKernels(img, kSize):
     """
     Applies a moving average filter using separable kernels without OpenCV.
@@ -149,6 +162,8 @@ def applyMovingAverageFilterWithSeperatedKernels(img, kSize):
     Returns:
         numpy.ndarray: Filtered image.
     """
+    img = Utilities.ensure_one_channel_grayscale_image(img)
+
     # Ensure kSize is odd to keep symmetry
     if kSize % 2 == 0:
         raise ValueError("Kernel size must be odd.")
@@ -185,7 +200,8 @@ def run_runtime_evaluation(img: np.ndarray):
 
     Plots the execution time for different kernel sizes (w).
     """
-    kernel_sizes = list(range(start=3, stop=16, step=2))  # w = 3, 5, 7, ..., 15
+    # (start=3, stop=16, step=2) => w = 3, 5, 7, ..., 15
+    kernel_sizes = list(range(3, 16, 2))  # w = 3, 5, 7, ..., 15
     methods = {
         "Naive Convolution": applyKernelInSpatialDomain,
         "Separable Kernels": applyMovingAverageFilterWithSeperatedKernels,
