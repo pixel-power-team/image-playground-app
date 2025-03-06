@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 
 
 def showHistogram(img):
-    color = ('b', 'g', 'r')
+    color = ('r', 'g', 'b')
     if len(img.shape) == 2:
         color = ('b')
 
@@ -14,7 +14,7 @@ def showHistogram(img):
     plt.show()
 
 def calculate_histogram(img):
-    color = ('b', 'g', 'r')
+    color = ('r', 'g', 'b')
     histogram = [0, 0, 0]
     if len(img.shape) == 2:
         color = ('b')
