@@ -92,17 +92,17 @@ class MainView(QMainWindow):
         self._ui.pushButton_filter_movAvg_int.clicked.connect(self.on_filter_moving_avg_integral_button_clicked)
         self._ui.pushButton_filter_median.clicked.connect(self.on_filter_median_button_clicked)
         self._ui.pushButton_filter_evaluation.clicked.connect(self.on_runtime_evaluation_button_clicked)
-
-        # Dropdown-Menü für Randbehandlung hinzufügen
-        self._ui.comboBox_border_handling = QComboBox(self)
-        self._ui.comboBox_border_handling.addItem("Extrapolieren", cv2.BORDER_REPLICATE)
-        self._ui.comboBox_border_handling.addItem("Spiegeln", cv2.BORDER_REFLECT)
-        self._ui.comboBox_border_handling.addItem("Zyklisch", cv2.BORDER_WRAP)
-        self._ui.comboBox_border_handling.addItem("Nullen", cv2.BORDER_CONSTANT)
-        # UI in das Layout integrieren
-        self._ui.layout_filter_options.addWidget(self._ui.comboBox_border_handling)
-        # Standardauswahl
-        self._ui.comboBox_border_handling.setCurrentIndex(1)
+        #
+        # # Dropdown-Menü für Randbehandlung hinzufügen
+        # self._ui.comboBox_border_handling = QComboBox(self)
+        # self._ui.comboBox_border_handling.addItem("Extrapolieren", cv2.BORDER_REPLICATE)
+        # self._ui.comboBox_border_handling.addItem("Spiegeln", cv2.BORDER_REFLECT)
+        # self._ui.comboBox_border_handling.addItem("Zyklisch", cv2.BORDER_WRAP)
+        # self._ui.comboBox_border_handling.addItem("Nullen", cv2.BORDER_CONSTANT)
+        # # UI in das Layout integrieren
+        # self._ui.layout_filter_options.addWidget(self._ui.comboBox_border_handling)
+        # # Standardauswahl
+        # self._ui.comboBox_border_handling.setCurrentIndex(1)
 
         ####################################################################
         #   listen for model event signals
