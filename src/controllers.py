@@ -116,34 +116,32 @@ class MainController():
     # Übung 3
     #####################################
 
-    def apply_gaussian_filter(self, kernel_size):
+    def apply_gaussian_filter(self, kernel_size, border_type):
         kernel = IF.createGaussianKernel(kernel_size)
-        img = IF.applyKernelInSpatialDomain(self._model.input_image, kernel)
+        img = IF.applyKernelInSpatialDomain(self._model.input_image, kernel, border_type)
         self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
 
-    def apply_moving_avg_filter(self, kernel_size):
+    def apply_moving_avg_filter(self, kernel_size, border_type):
         kernel = IF.createMovingAverageKernel(kernel_size)
-        img = IF.applyKernelInSpatialDomain(self._model.input_image, kernel)
+        img = IF.applyKernelInSpatialDomain(self._model.input_image, kernel, border_type)
         self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
 
     def apply_moving_avg_filter_integral(self, kernel_size):
         img = IF.applyMovingAverageFilterWithIntegralImage(self._model.input_image, kernel_size)
         self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
 
-    def apply_median_filter(self, kernel_size):
+    def apply_median_filter(self, kernel_size, border_type):
         img = IF.applyMedianFilter(self._model.input_image, kernel_size)
         self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
 
-
-
-    def apply_filter_sobelX(self):
+    def apply_filter_sobelX(self, border_type):
         kernel = IF.createSobelXKernel()
-        img = IF.applyKernelInSpatialDomain(self._model.input_image, kernel)
+        img = IF.applyKernelInSpatialDomain(self._model.input_image, kernel, border_type)
         self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
 
-    def apply_filter_sobelY(self):
+    def apply_filter_sobelY(self, border_type):
         kernel = IF.createSobelYKernel()
-        img = IF.applyKernelInSpatialDomain(self._model.input_image, kernel)
+        img = IF.applyKernelInSpatialDomain(self._model.input_image, kernel, border_type)
         self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
 
 

@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QThread, QTimer, QRegularExpression
 from PyQt6.QtWidgets import QMainWindow, QWidget, QPushButton, QVBoxLayout, QApplication, QSlider
@@ -17,6 +18,7 @@ from PyQt6.QtCore import pyqtSignal, pyqtSlot
 
 
 from PyQt6.QtWidgets import QMainWindow, QFileDialog
+from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtCore import pyqtSlot, QObject
 
 
@@ -91,6 +93,16 @@ class MainView(QMainWindow):
         self._ui.pushButton_filter_median.clicked.connect(self.on_filter_median_button_clicked)
         self._ui.pushButton_filter_evaluation.clicked.connect(self.on_runtime_evaluation_button_clicked)
 
+        # Dropdown-Menü für Randbehandlung hinzufügen
+        self._ui.comboBox_border_handling = QComboBox(self)
+        self._ui.comboBox_border_handling.addItem("Extrapolieren", cv2.BORDER_REPLICATE)
+        self._ui.comboBox_border_handling.addItem("Spiegeln", cv2.BORDER_REFLECT)
+        self._ui.comboBox_border_handling.addItem("Zyklisch", cv2.BORDER_WRAP)
+        self._ui.comboBox_border_handling.addItem("Nullen", cv2.BORDER_CONSTANT)
+        # UI in das Layout integrieren
+        self._ui.layout_filter_options.addWidget(self._ui.comboBox_border_handling)
+        # Standardauswahl
+        self._ui.comboBox_border_handling.setCurrentIndex(1)
 
         ####################################################################
         #   listen for model event signals
@@ -271,21 +283,28 @@ class MainView(QMainWindow):
     #####################
     # Übung 3
     #####################
+    def get_selected_border_handling(self):
+        """Liefert die ausgewählte Randbehandlung zurück"""
+        return self._ui.comboBox_border_handling.currentData()
 
     def on_filter_sobelX_button_clicked(self):
-        self._main_controller.apply_filter_sobelX()
+        border_type = self.get_selected_border_handling()
+        self._main_controller.apply_filter_sobelX(border_type)
         self.on_image_changed()
 
     def on_filter_sobelY_button_clicked(self):
-        self._main_controller.apply_filter_sobelY()
+        border_type = self.get_selected_border_handling()
+        self._main_controller.apply_filter_sobelY(border_type)
         self.on_image_changed()
 
     def on_filter_gauss_button_clicked(self):
-        self._main_controller.apply_gaussian_filter(self._ui.spinBox_filter_avg_size.value())
+        border_type = self.get_selected_border_handling()
+        self._main_controller.apply_gaussian_filter(self._ui.spinBox_filter_avg_size.value(), border_type)
         self.on_image_changed()
 
     def on_filter_moving_avg_button_clicked(self):
-        self._main_controller.apply_moving_avg_filter(self._ui.spinBox_filter_avg_size.value())
+        border_type = self.get_selected_border_handling()
+        self._main_controller.apply_moving_avg_filter(self._ui.spinBox_filter_avg_size.value(), border_type)
         self.on_image_changed()
 
     def on_filter_moving_avg_integral_button_clicked(self):
@@ -293,7 +312,8 @@ class MainView(QMainWindow):
         self.on_image_changed()
 
     def on_filter_median_button_clicked(self):
-        self._main_controller.apply_median_filter(self._ui.spinBox_filter_avg_size.value())
+        border_type = self.get_selected_border_handling()
+        self._main_controller.apply_median_filter(self._ui.spinBox_filter_avg_size.value(), border_type)
         self.on_image_changed()
 
     def on_runtime_evaluation_button_clicked(self):
