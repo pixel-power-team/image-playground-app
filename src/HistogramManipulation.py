@@ -26,7 +26,7 @@ def applyLUT(img, LUT):
 
 def convertToGrayScale(img):
     print("Convert To grayScale")
-    result = img.copy()
+    result = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     return result
 
 # Hilfsfunktion
