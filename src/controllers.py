@@ -94,6 +94,8 @@ class MainController():
     # Übung 2
     #####################################
 
+    def convert_to_grayscale(self):
+        self._model.image = HM.convertToGrayScale(self._model.input_image)
     def stretch_image(self):
         self._model.image = HM.stretchHistogram(self._model.input_image)
 
