@@ -1,21 +1,22 @@
 import cv2
 import numpy as np
+import Utilities
 
 # Task 1
 # function to stretch an image
 def stretchHistogram(img):
-    gray_img = convertToGrayScale(img) # In Graustufen umwandeln
+    gray_img = convertToGrayScale(img)
     histogram = calculateHistogram(gray_img)
     minVal, maxVal = findMinMaxPos(histogram)
-    LUT = np.interp(np.arange(256), [minVal, maxVal], [0, 255]).astype(np.uint8)
-    return applyLUT(gray_img, LUT)
+    g = ((gray_img - minVal) / (maxVal - minVal) * 255).astype(np.uint8)
+    return g
 
 # Task 2
 # function to equalize an image
 def equalizeHistogram(img):
     gray_img = convertToGrayScale(img)
     histogram = calculateHistogram(gray_img)
-    cdf = np.cumsum(histogram)  # Kumulative Verteilung
+    cdf = np.cumsum(histogram) 
     cdf_normalized = ((cdf - cdf.min()) / (cdf.max() - cdf.min()) * 255).astype(np.uint8)
     return applyLUT(gray_img , cdf_normalized)
 
@@ -87,16 +88,38 @@ def calculateHistogram(img, nrBins=256):
 
 
 def apply_log(img):
+    gray_img = convertToGrayScale(img)
     LUT = (np.log1p(np.arange(256)) / np.log1p(255) * 255).astype(np.uint8)
-    return applyLUT(img, LUT)
+    return applyLUT(gray_img, LUT)
 
 def apply_exp(img):
+    gray_img = convertToGrayScale(img)
     LUT = ((np.exp(np.arange(256) / 255.0) - 1) / (np.exp(1) - 1) * 255).astype(np.uint8)
-    return applyLUT(img, LUT)
+    return applyLUT(gray_img, LUT)
 
 def apply_inverse(img):
+    gray_img = convertToGrayScale(img)
     LUT = np.array([255 - i for i in range(256)], dtype=np.uint8)
-    return applyLUT(img, LUT)
+    return applyLUT(gray_img, LUT)
 
 def apply_threshold(img, threshold):
-    return np.where(img >= threshold, 255, 0).astype(np.uint8)
+    gray_img = convertToGrayScale(img)
+    return np.where(gray_img >= threshold, 255, 0).astype(np.uint8)
+
+def fill_hist(img):
+    gray_img = convertToGrayScale(img) 
+    hist = calculateHistogram(gray_img)  
+    hist = hist.flatten()
+    total_bins = len(hist)
+    window_size = max(3, int(total_bins * 0.05))
+    # Moving Average anwenden
+    def moving_average(data, window_size):
+        return np.convolve(data, np.ones(window_size)/window_size, mode='same')
+
+    smoothed_hist = moving_average(hist, window_size=window_size).astype(np.uint8)
+    LUT = np.zeros(256, dtype=np.uint8)
+    for i in range(256):
+        LUT[i] = smoothed_hist[i] if i < len(smoothed_hist) else 0
+    return applyLUT(gray_img, LUT)
+    
+    

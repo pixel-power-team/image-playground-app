@@ -571,7 +571,7 @@
            <item>
              <widget class="QPushButton" name="pushButton_convert_to_grayscale">
               <property name="text">
-               <string>Histogram Stretch</string>
+               <string>Convert to Grayscale img</string>
               </property>
              </widget>
             </item>

@@ -507,7 +507,7 @@ class Ui_MainWindow(object):
         self.lineEdit_image_height.setPlaceholderText(_translate("MainWindow", "100"))
         self.label_2.setText(_translate("MainWindow", "Neue Höhe"))
         self.tabWidget_controller.setTabText(self.tabWidget_controller.indexOf(self.tab_geometric_adjustments), _translate("MainWindow", "Größe"))
-        self.pushButton_hist_convertToGrayScale.setText(_translate("MainWindow", "Convert to gray_img"))
+        self.pushButton_hist_convertToGrayScale.setText(_translate("MainWindow", "Zu Graubild umwandeln"))
         self.pushButton_hist_stretch.setText(_translate("MainWindow", "Histogram Stretch"))
         self.pushButton_hist_equalization.setText(_translate("MainWindow", "Histogram Equalization"))
         self.pushButton_hist_log.setText(_translate("MainWindow", "Logarithmus"))

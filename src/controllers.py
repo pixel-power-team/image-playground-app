@@ -114,6 +114,9 @@ class MainController():
     def apply_threshold(self, threshold):
         self._model.image = HM.apply_threshold(self._model.input_image, threshold)
 
+    def fill_hist(self):
+        self._model.image = HM.fill_hist(self._model.input_image)
+
     #####################################
     # Übung 3
     #####################################

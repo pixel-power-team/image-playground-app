@@ -64,6 +64,7 @@ class MainView(QMainWindow):
         self._ui.pushButton_hist_convertToGrayScale.clicked.connect(self.on_hist_convertToGrayScale_button_clicked)
         self._ui.pushButton_hist_equalization.clicked.connect(self.on_hist_equal_button_clicked)
         self._ui.pushButton_AWS_Labeling.clicked.connect(self.on_AWS_Rekognition_button_clicked)
+        self._ui.pushButton_hist_fill.clicked.connect(self.on_hist_fill_button_clicked)
         self._ui.pushButton_adjust_image_size.clicked.connect(self.on_resize_button_clicked)
 
         self._ui.pushButton_reset_output_image.clicked.connect(self.on_reset_output_image_button_clicked)
@@ -186,6 +187,10 @@ class MainView(QMainWindow):
 
     def on_hist_equal_button_clicked(self):
         self._main_controller.equalize_image()
+        self.on_image_changed()
+    
+    def on_hist_fill_button_clicked(self):
+        self._main_controller.fill_hist()
         self.on_image_changed()
 
     def on_AWS_Rekognition_button_clicked(self):
