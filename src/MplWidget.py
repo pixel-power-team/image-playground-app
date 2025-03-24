@@ -39,7 +39,7 @@ class MplWidget(QtWidgets.QWidget):
         self.canvas.ax.cla()
 
         histogram = self._controller.calculate_histogram(img)
-        color = ('b', 'g', 'r')
+        color = ('r', 'g', 'b')
 
         if len(histogram) == 1:
             color = ('b')
