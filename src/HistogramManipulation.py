@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 
 # Task 1
 # function to stretch an image
@@ -25,9 +24,49 @@ def applyLUT(img, LUT):
     return cv2.LUT(img, LUT)
 
 def convertToGrayScale(img):
-    print("Convert To grayScale")
-    result = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    return result
+    """
+   Wandelt ein Farbbild manuell in ein Graustufenbild um, basierend auf der menschlichen Helligkeitswahrnehmung:
+       Grauwert = 0.299 * R + 0.587 * G + 0.114 * B
+
+   Zusätzlich wird das erzeugte Graubild am Ende in ein 3-kanaliges BGR-Bild umgewandelt, bei dem alle Farbkanäle
+   denselben Grauwert tragen.
+   Denn bei der Darstellung wird standardmäßig ein Bild mit 3 Farbkanälen (shape = H x W x 3) erwartet.
+   Wenn nur ein Graustufenbild (shape = H x W) geliefert wird, kann es dort zu Fehlern kommen, weil
+   erwartet wird, dass man „Höhe, Breite und Kanäle“ entpacken kann. 
+   Deshalb erzeugen wir aus dem Graubild ein 3-kanaliges Bild mit identischen Grauwerten in jedem Kanal.
+   """
+    print("Convert to grayscale (manual)")
+
+    # Wenn Bild schon Graustufenbild ist → Umwandlung in 3-Kanal
+    if len(img.shape) == 2:
+        print("Image is already grayscale. Expanding to 3-channel.")
+        height, width = img.shape
+        gray_image_3ch = np.zeros((height, width, 3), dtype=np.uint8)
+        for y in range(height):
+            for x in range(width):
+                gray = img[y, x]
+                gray_image_3ch[y, x] = (gray, gray, gray)
+        return gray_image_3ch
+
+    # Falls Farb-Bild: manuelle Grauwertberechnung
+    height, width = img.shape[:2]
+    gray_image = np.zeros((height, width), dtype=np.uint8)
+
+    for y in range(height):
+        for x in range(width):
+            blue, green, red = img[y, x]
+            gray = int(0.114 * blue + 0.587 * green + 0.299 * red)
+            gray_image[y, x] = gray
+
+    # Graubild manuell auf 3 Kanäle erweitern
+    gray_image_3ch = np.zeros((height, width, 3), dtype=np.uint8)
+    for y in range(height):
+        for x in range(width):
+            g = gray_image[y, x]
+            gray_image_3ch[y, x] = (g, g, g)
+
+    return gray_image_3ch
+
 
 # Hilfsfunktion
 # function to find the minimum an maximum in a histogram
