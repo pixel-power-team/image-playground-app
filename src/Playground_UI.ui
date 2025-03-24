@@ -568,6 +568,13 @@
             <string>Histogramm Mapping</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_9">
+           <item>
+             <widget class="QPushButton" name="pushButton_convert_to_grayscale">
+              <property name="text">
+               <string>Convert to Grayscale img</string>
+              </property>
+             </widget>
+            </item>
             <item>
              <widget class="QPushButton" name="pushButton_hist_stretch">
               <property name="text">
