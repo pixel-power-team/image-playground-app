@@ -4,24 +4,26 @@ import numpy as np
 # Task 1
 # function to stretch an image
 def stretchHistogram(img):
-    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # In Graustufen umwandeln
+    gray_img = convertToGrayScale(img) # In Graustufen umwandeln
     histogram = calculateHistogram(gray_img)
     minVal, maxVal = findMinMaxPos(histogram)
     LUT = np.interp(np.arange(256), [minVal, maxVal], [0, 255]).astype(np.uint8)
-    return applyLUT(img, LUT)
+    return applyLUT(gray_img, LUT)
 
 # Task 2
 # function to equalize an image
 def equalizeHistogram(img):
-    histogram = calculateHistogram(img)
+    gray_img = convertToGrayScale(img)
+    histogram = calculateHistogram(gray_img)
     cdf = np.cumsum(histogram)  # Kumulative Verteilung
     cdf_normalized = ((cdf - cdf.min()) / (cdf.max() - cdf.min()) * 255).astype(np.uint8)
-    return applyLUT(img, cdf_normalized)
+    return applyLUT(gray_img , cdf_normalized)
 
 #Hilfsfunktion
 # function to apply a look-up table onto an image
 def applyLUT(img, LUT):
     return cv2.LUT(img, LUT)
+
 
 def convertToGrayScale(img):
     """
