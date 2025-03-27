@@ -12,18 +12,25 @@ import Utilities
 # 🔹 Randbehandlung-Funktion
 def applyBorderHandling(img, border_type):
     """Wendet eine Randbehandlung auf das Bild an, ohne die Größe zu verändern."""
+    # Logs the selected border handling method for debugging purposes.
     print(f"[DEBUG] Applying border handling: {border_type}")
     if border_type == "Extrapolieren":
+        # Applies the "Replicate" border handling method.
         result = cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
     elif border_type == "Spiegeln":
+        # Applies the "Reflect" border handling method.
         result = cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_REFLECT)
     elif border_type == "Zyklisch":
+        # Applies the "Wrap" border handling method.
         result = cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_WRAP)
     elif border_type == "Nullen":
+        # Applies the "Constant" border handling method with a value of 0.
         result = cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=0)
     else:
+        # Defaults to "Reflect" if an invalid method is provided.
         print("⚠️ Ungültige Randbehandlung. Standardmäßig: Spiegeln.")
         result = cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_REFLECT)
+    # Logs the successful application of the border handling method.
     print(f"[DEBUG] Border handling '{border_type}' applied successfully.")
     return result
 
@@ -31,6 +38,8 @@ def get_supported_edge_handling_methods():
     """
     Returns a list of supported edge handling methods.
     """
+    # This function provides a centralized list of supported methods for edge handling.
+    # It ensures consistency across the application.
     return ["Reflect", "Replicate", "Constant", "Wrap"]
 
 ##########################################################################################

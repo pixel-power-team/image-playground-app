@@ -38,15 +38,18 @@ class MainView(QMainWindow):
         self.update_input_image()
 
         # Clear existing items in the dropdown to avoid duplicates
+        # This ensures that the dropdown is reset before adding new items.
         self._ui.comboBox_border_handling.clear()
 
         # Initialize edge handling dropdown with localized terms
+        # These terms ("Extrapolieren", "Spiegeln", etc.) are user-friendly and correspond to the edge handling methods.
         valid_methods = [
             ("Extrapolieren", "Extrapolieren"),
             ("Spiegeln", "Spiegeln"),
             ("Zyklisch", "Zyklisch"),
             ("Nullen", "Nullen")
         ]
+        # Add each method to the dropdown menu
         for display_text, method in valid_methods:
             self._ui.comboBox_border_handling.addItem(display_text, method)
         self._ui.comboBox_border_handling.setCurrentIndex(0)  # Default to the first method
@@ -308,10 +311,13 @@ class MainView(QMainWindow):
     #####################
     def get_selected_border_handling(self):
         """Returns the selected edge handling method."""
+        # Retrieves the currently selected method from the dropdown.
         selected_method = self._ui.comboBox_border_handling.currentData()
+        # Validates that the selected method is one of the supported methods.
         if selected_method in ["Extrapolieren", "Spiegeln", "Zyklisch", "Nullen"]:
             return selected_method
         else:
+            # If the selected method is invalid, default to "Spiegeln" and log a warning.
             print("[WARNING] Selected edge handling method is not valid. Defaulting to 'Spiegeln'.")
             return "Spiegeln"
 
