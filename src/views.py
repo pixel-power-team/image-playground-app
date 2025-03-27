@@ -61,8 +61,10 @@ class MainView(QMainWindow):
         self._ui.action_save_histogram.triggered.connect(self.on_save_histogram_to_filesystem)
         self._ui.horizontalSlider_color_clusters.sliderReleased.connect(self.on_color_cluster_slider_changed)
         self._ui.pushButton_hist_stretch.clicked.connect(self.on_hist_stretch_button_clicked)
+        self._ui.pushButton_hist_convertToGrayScale.clicked.connect(self.on_hist_convertToGrayScale_button_clicked)
         self._ui.pushButton_hist_equalization.clicked.connect(self.on_hist_equal_button_clicked)
         self._ui.pushButton_AWS_Labeling.clicked.connect(self.on_AWS_Rekognition_button_clicked)
+        self._ui.pushButton_hist_fill.clicked.connect(self.on_hist_fill_button_clicked)
         self._ui.pushButton_adjust_image_size.clicked.connect(self.on_resize_button_clicked)
 
         self._ui.pushButton_reset_output_image.clicked.connect(self.on_reset_output_image_button_clicked)
@@ -181,8 +183,16 @@ class MainView(QMainWindow):
         self._main_controller.stretch_image()
         self.on_image_changed()
 
+    def on_hist_convertToGrayScale_button_clicked(self):
+        self._main_controller.convert_to_grayscale()
+        self.on_image_changed()
+
     def on_hist_equal_button_clicked(self):
         self._main_controller.equalize_image()
+        self.on_image_changed()
+    
+    def on_hist_fill_button_clicked(self):
+        self._main_controller.fill_hist()
         self.on_image_changed()
 
     def on_AWS_Rekognition_button_clicked(self):
