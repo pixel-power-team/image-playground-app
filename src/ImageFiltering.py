@@ -113,6 +113,56 @@ def applyGaussianFilter(img, kSize=5, sigma=1.0, border_type="Reflect"):
 
     return filtered_img
 
+def applyGaussianFilterWithEdgeHandling(img_path, output_path, kernel_size=5, sigma=1.0, border_type="Spiegeln"):
+    """
+    Applies a Gaussian filter to a grayscale image with the specified edge handling.
+
+    Args:
+        img_path (str): Path to the input grayscale image.
+        output_path (str): Path to save the filtered image.
+        kernel_size (int): Size of the Gaussian kernel (must be odd).
+        sigma (float): Standard deviation for the Gaussian kernel.
+        border_type (str): Edge handling method ("Extrapolieren", "Spiegeln", "Zyklisch", "Nullen").
+
+    Returns:
+        None
+    """
+    # Validate kernel size
+    if kernel_size <= 0 or kernel_size % 2 == 0:
+        print(f"[ERROR] Invalid kernel size: {kernel_size}. Kernel size must be a positive odd integer.")
+        return
+
+    # Load the grayscale image
+    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+    if img is None:
+        print(f"[ERROR] Could not load the image from {img_path}.")
+        return
+
+    print(f"[INFO] Image loaded successfully from {img_path}. Dimensions: {img.shape}")
+
+    # Apply the selected edge handling
+    img_with_border = applyBorderHandling(img, border_type)
+    print(f"[DEBUG] Image dimensions after border handling: {img_with_border.shape}")
+
+    # Define the Gaussian kernel
+    kernel = createGaussianKernel(kernel_size, sigma)
+    print(f"[DEBUG] Gaussian kernel created with size: {kernel_size} and sigma: {sigma}")
+
+    # Perform the convolution in the spatial domain
+    try:
+        filtered_img = cv2.filter2D(img_with_border, -1, kernel, borderType=cv2.BORDER_DEFAULT)
+        print(f"[INFO] Gaussian filter applied successfully.")
+    except Exception as e:
+        print(f"[ERROR] Error during Gaussian filter application: {e}")
+        return
+
+    # Save the filtered image
+    try:
+        cv2.imwrite(output_path, filtered_img)
+        print(f"[INFO] Filtered image saved successfully to {output_path}.")
+    except Exception as e:
+        print(f"[ERROR] Could not save the filtered image: {e}")
+
 # 🔹 Test-Code zum Laden & Anwenden des Filters
 if __name__ == "__main__":
     img = cv2.imread("testbild.jpg", cv2.IMREAD_GRAYSCALE)
@@ -263,7 +313,7 @@ def apply_filter_in_spatial_domain(img, kernel, edge_handling="Reflect"):
 
     # Apply the filter
     try:
-        filtered_img = cv2.filter2D(img, -1, kernel, borderType=border_type)
+        filtered_img = cv2.filter2D(img, -1, kernel, borderType=cv2.BORDER_REFLECT)
         print(f"[DEBUG] Filter applied successfully with edge handling: {edge_handling}")
     except Exception as e:
         print(f"[ERROR] Error during filtering with edge handling '{edge_handling}': {e}")

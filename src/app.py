@@ -18,4 +18,4 @@ class App(QApplication):
 if __name__ == '__main__':
     app = App(sys.argv)
     sys.exit(app.exec())
-    app.exit(app.exec_())
+    app.exit(app.exec_()) 
