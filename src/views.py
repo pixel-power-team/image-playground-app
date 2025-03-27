@@ -7,6 +7,7 @@ from PyQt6.QtGui import QPixmap, QColor, QRegularExpressionValidator
 import logging
 from loggers import LogEmitter
 import models
+import ImageFiltering as IF  # Import the ImageFiltering module
 
 
 import sys
@@ -36,7 +37,19 @@ class MainView(QMainWindow):
         self.update_image()
         self.update_input_image()
 
+        # Clear existing items in the dropdown to avoid duplicates
+        self._ui.comboBox_border_handling.clear()
 
+        # Initialize edge handling dropdown with localized terms
+        valid_methods = [
+            ("Extrapolieren", "Extrapolieren"),
+            ("Spiegeln", "Spiegeln"),
+            ("Zyklisch", "Zyklisch"),
+            ("Nullen", "Nullen")
+        ]
+        for display_text, method in valid_methods:
+            self._ui.comboBox_border_handling.addItem(display_text, method)
+        self._ui.comboBox_border_handling.setCurrentIndex(0)  # Default to the first method
 
         self._ui.widget_histogram.controller = self._main_controller
 
@@ -294,8 +307,13 @@ class MainView(QMainWindow):
     # Übung 3
     #####################
     def get_selected_border_handling(self):
-        """Liefert die ausgewählte Randbehandlung zurück"""
-        return self._ui.comboBox_border_handling.currentData()
+        """Returns the selected edge handling method."""
+        selected_method = self._ui.comboBox_border_handling.currentData()
+        if selected_method in ["Extrapolieren", "Spiegeln", "Zyklisch", "Nullen"]:
+            return selected_method
+        else:
+            print("[WARNING] Selected edge handling method is not valid. Defaulting to 'Spiegeln'.")
+            return "Spiegeln"
 
     def on_filter_sobelX_button_clicked(self):
         border_type = self.get_selected_border_handling()
@@ -308,7 +326,8 @@ class MainView(QMainWindow):
         self.on_image_changed()
 
     def on_filter_gauss_button_clicked(self):
-        border_type = self.get_selected_border_handling()
+        # Always use "Reflect" as the edge handling method
+        border_type = "Reflect"
         self._main_controller.apply_gaussian_filter(self._ui.spinBox_filter_avg_size.value(), border_type)
         self.on_image_changed()
 
@@ -317,11 +336,11 @@ class MainView(QMainWindow):
             # Retrieve kernel size and edge handling method
             kernel_size = self._ui.spinBox_filter_avg_size.value()
             border_type = self.get_selected_border_handling()
-
+            if not border_type:
+                border_type = "Reflect"  # Default to "Reflect" if no edge handling is selected
             # Validate kernel size
             if kernel_size % 2 == 0 or kernel_size <= 0:
                 raise ValueError("Kernel size must be a positive odd integer.")
-
             # Apply the moving average filter
             print(f"Applying Moving Average Filter with kernel size: {kernel_size}, border type: {border_type}")
             self._main_controller.apply_moving_avg_filter(kernel_size, border_type)
@@ -348,7 +367,7 @@ def convert_cv_qt(cv_img, display_width, display_height):
     bytes_per_line = ch * w
     convert_to_Qt_format = QtGui.QImage(cv_img.data, w, h, bytes_per_line, QtGui.QImage.Format.Format_RGB888)
     p = convert_to_Qt_format.scaled(display_width, display_height, Qt.AspectRatioMode.KeepAspectRatio)
-    return QPixmap.fromImage(convert_to_Qt_format)
+    return QPixmap.fromImage(p)
 
 def convert_cv2scaledqt(cv_img, display_width, display_height):
     """Convert from an opencv image to QPixmap"""

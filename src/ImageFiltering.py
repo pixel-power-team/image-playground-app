@@ -12,17 +12,26 @@ import Utilities
 # 🔹 Randbehandlung-Funktion
 def applyBorderHandling(img, border_type):
     """Wendet eine Randbehandlung auf das Bild an, ohne die Größe zu verändern."""
+    print(f"[DEBUG] Applying border handling: {border_type}")
     if border_type == "Extrapolieren":
-        return cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
+        result = cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
     elif border_type == "Spiegeln":
-        return cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_REFLECT)
+        result = cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_REFLECT)
     elif border_type == "Zyklisch":
-        return cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_WRAP)
+        result = cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_WRAP)
     elif border_type == "Nullen":
-        return cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=0)
+        result = cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=0)
     else:
         print("⚠️ Ungültige Randbehandlung. Standardmäßig: Spiegeln.")
-        return cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_REFLECT)
+        result = cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_REFLECT)
+    print(f"[DEBUG] Border handling '{border_type}' applied successfully.")
+    return result
+
+def get_supported_edge_handling_methods():
+    """
+    Returns a list of supported edge handling methods.
+    """
+    return ["Reflect", "Replicate", "Constant", "Wrap"]
 
 ##########################################################################################
 # Filter funktionenunter anwednugn der falterung im raum :
@@ -79,9 +88,9 @@ def createGaussianKernel(kSize, sigma=1.0):
 
 
 
-def applyGaussianFilter(img, kSize=5, sigma=1.0,border_type="Spiegeln"):
+def applyGaussianFilter(img, kSize=5, sigma=1.0, border_type="Reflect"):
     """Wendet einen Gauß-Filter mit der gewählten Randbehandlung an."""
-    print(f"Wende Gaußfilter an mit Randbehandlung: {border_type}")
+    print(f"[DEBUG] Applying Gaussian Filter with edge handling: {border_type}")
 
     # Randbehandlung anwenden
     img_with_border = applyBorderHandling(img, border_type)
@@ -91,6 +100,7 @@ def applyGaussianFilter(img, kSize=5, sigma=1.0,border_type="Spiegeln"):
 
     # Faltung durchführen
     filtered_img = cv2.filter2D(img_with_border, -1, kernel, borderType=cv2.BORDER_DEFAULT)
+    print(f"[DEBUG] Gaussian Filter applied successfully with edge handling: {border_type}")
 
     return filtered_img
 
@@ -231,11 +241,9 @@ def apply_filter_in_spatial_domain(img, kernel, edge_handling="Reflect"):
         raise ValueError("Kernel must be a 2D array.")
 
     # Debug logs
-    print(f"Applying filter with kernel size: {kernel.shape}")
-    print(f"Image dimensions: {img.shape}")
-    print(f"Edge handling method: {edge_handling}")
-
-    # Define border types
+    if not edge_handling:
+        edge_handling = "Reflect"  # Default to "Reflect" if no edge handling is provided
+    print(f"[DEBUG] Applying filter with edge handling: {edge_handling}")
     border_types = {
         "Reflect": cv2.BORDER_REFLECT,
         "Replicate": cv2.BORDER_REPLICATE,
@@ -247,8 +255,9 @@ def apply_filter_in_spatial_domain(img, kernel, edge_handling="Reflect"):
     # Apply the filter
     try:
         filtered_img = cv2.filter2D(img, -1, kernel, borderType=border_type)
+        print(f"[DEBUG] Filter applied successfully with edge handling: {edge_handling}")
     except Exception as e:
-        print(f"Error during filtering: {e}")
+        print(f"[ERROR] Error during filtering with edge handling '{edge_handling}': {e}")
         raise
 
     return filtered_img

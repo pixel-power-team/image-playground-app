@@ -123,25 +123,22 @@ class MainController():
     def apply_boarder_handling(self, border_type):
         self._model.image = IF.applyBorderHandling(self._model.input_image, border_type)
 
-    def apply_gaussian_filter(self, kernel_size):
-        img = IF.applyGaussianFilter(self._model.input_image, kernel_size)
+    def apply_gaussian_filter(self, kernel_size, border_type="Reflect"):
+        print(f"[DEBUG] Applying Gaussian Filter with edge handling: {border_type}")
+        img = IF.applyGaussianFilter(self._model.input_image, kernel_size, border_type=border_type)
         self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
 
-    def apply_moving_avg_filter(self, kernel_size, border_type):
+    def apply_moving_avg_filter(self, kernel_size, border_type="Reflect"):
         try:
-            # Convert the input image to grayscale
+            if not border_type:
+                border_type = "Reflect"  # Default to "Reflect" if no edge handling is provided
+            print(f"[DEBUG] Applying Moving Average Filter with edge handling: {border_type}")
             grayscale_image = Utilities.ensure_one_channel_grayscale_image(self._model.image)
-
-            # Create the moving average kernel
             kernel = IF.create_moving_average_kernel(kernel_size)
-
-            # Apply the filter
             filtered_img = IF.apply_filter_in_spatial_domain(grayscale_image, kernel, edge_handling=border_type)
-
-            # Update the model with the filtered image
             self._model.image = Utilities.ensure_three_channel_grayscale_image(filtered_img)
         except Exception as e:
-            print(f"Error applying Moving Average Filter: {e}")
+            print(f"[ERROR] Error applying Moving Average Filter: {e}")
             logging.error(f"Error applying Moving Average Filter: {e}", exc_info=True)
             raise
 
@@ -149,11 +146,10 @@ class MainController():
         img = IF.applyMovingAverageFilterWithIntegralImage(self._model.input_image, kernel_size)
         self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
 
-
-    def apply_median_filter(self, kernel_size):
-        img = IF.applyMedianFilter(self._model.input_image, kernel_size)
+    def apply_median_filter(self, kernel_size, border_type="Reflect"):
+        print(f"[DEBUG] Applying Median Filter with edge handling: {border_type}")
+        img = IF.applyMedianFilter(self._model.input_image, kernel_size, borderType=border_type)
         self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
-
 
     def apply_filter_sobelX(self):
         img = IF.applySobelXFilter(self._model.input_image)
