@@ -313,9 +313,22 @@ class MainView(QMainWindow):
         self.on_image_changed()
 
     def on_filter_moving_avg_button_clicked(self):
-        border_type = self.get_selected_border_handling()
-        self._main_controller.apply_moving_avg_filter(self._ui.spinBox_filter_avg_size.value(), border_type)
-        self.on_image_changed()
+        try:
+            # Retrieve kernel size and edge handling method
+            kernel_size = self._ui.spinBox_filter_avg_size.value()
+            border_type = self.get_selected_border_handling()
+
+            # Validate kernel size
+            if kernel_size % 2 == 0 or kernel_size <= 0:
+                raise ValueError("Kernel size must be a positive odd integer.")
+
+            # Apply the moving average filter
+            print(f"Applying Moving Average Filter with kernel size: {kernel_size}, border type: {border_type}")
+            self._main_controller.apply_moving_avg_filter(kernel_size, border_type)
+            self.on_image_changed()
+        except Exception as e:
+            print(f"Error in Moving Average Filter: {e}")
+            logging.error(f"Error in Moving Average Filter: {e}", exc_info=True)
 
     def on_filter_moving_avg_integral_button_clicked(self):
         self._main_controller.apply_moving_avg_filter_integral(self._ui.spinBox_filter_avg_size.value())

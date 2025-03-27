@@ -190,3 +190,90 @@ def applyMovingAverageFilterWithSeperatedKernels(img, kSize):
 def run_runtime_evaluation(img):
     print("Runtime Evaluation gestartet")
     pass
+
+import cv2
+import numpy as np
+
+def create_moving_average_kernel(kSize):
+    """
+    Creates a moving average kernel of the specified size.
+
+    Args:
+        kSize (int): Kernel size (must be positive and odd).
+
+    Returns:
+        numpy.ndarray: Moving average kernel.
+    """
+    if kSize % 2 == 0:
+        raise ValueError("Kernel size must be odd.")
+    return np.ones((kSize, kSize), dtype=np.float32) / (kSize * kSize)
+
+def apply_filter_in_spatial_domain(img, kernel, edge_handling="Reflect"):
+    """
+    Applies a kernel to an image in the spatial domain with the specified edge handling.
+
+    Args:
+        img (numpy.ndarray): Grayscale image to filter.
+        kernel (numpy.ndarray): Kernel to apply.
+        edge_handling (str): Edge handling method ("Reflect", "Replicate", "Constant", "Wrap").
+
+    Returns:
+        numpy.ndarray: Filtered image.
+    """
+    # Validate inputs
+    if img is None or not isinstance(img, np.ndarray):
+        raise ValueError("Input image must be a valid numpy array.")
+    if kernel is None or not isinstance(kernel, np.ndarray):
+        raise ValueError("Kernel must be a valid numpy array.")
+    if img.ndim != 2:
+        raise ValueError("Input image must be a grayscale (2D) image.")
+    if kernel.ndim != 2:
+        raise ValueError("Kernel must be a 2D array.")
+
+    # Debug logs
+    print(f"Applying filter with kernel size: {kernel.shape}")
+    print(f"Image dimensions: {img.shape}")
+    print(f"Edge handling method: {edge_handling}")
+
+    # Define border types
+    border_types = {
+        "Reflect": cv2.BORDER_REFLECT,
+        "Replicate": cv2.BORDER_REPLICATE,
+        "Constant": cv2.BORDER_CONSTANT,
+        "Wrap": cv2.BORDER_WRAP
+    }
+    border_type = border_types.get(edge_handling, cv2.BORDER_REFLECT)
+
+    # Apply the filter
+    try:
+        filtered_img = cv2.filter2D(img, -1, kernel, borderType=border_type)
+    except Exception as e:
+        print(f"Error during filtering: {e}")
+        raise
+
+    return filtered_img
+
+if __name__ == "__main__":
+    # Load the image as grayscale
+    input_path = "input_image.jpg"  # Replace with your input image path
+    output_path = "filtered_image.jpg"  # Replace with your desired output path
+    img = cv2.imread(input_path, cv2.IMREAD_GRAYSCALE)
+
+    if img is None:
+        print("Error: Could not load the image.")
+    else:
+        print("Image loaded successfully.")
+
+        # Define kernel size and edge handling
+        kernel_size = 5  # Example kernel size
+        edge_handling_method = "Reflect"  # Example edge handling method
+
+        # Create the moving average kernel
+        kernel = create_moving_average_kernel(kernel_size)
+
+        # Apply the filter
+        filtered_img = apply_filter_in_spatial_domain(img, kernel, edge_handling=edge_handling_method)
+
+        # Save the filtered image
+        cv2.imwrite(output_path, filtered_img)
+        print(f"Filtered image saved as '{output_path}'.")

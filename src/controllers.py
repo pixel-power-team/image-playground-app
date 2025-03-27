@@ -127,9 +127,23 @@ class MainController():
         img = IF.applyGaussianFilter(self._model.input_image, kernel_size)
         self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
 
-    def apply_moving_avg_filter(self, kernel_size):
-        img = IF.applyMovingAverageFilter(self._model.input_image, kernel_size)
-        self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
+    def apply_moving_avg_filter(self, kernel_size, border_type):
+        try:
+            # Convert the input image to grayscale
+            grayscale_image = Utilities.ensure_one_channel_grayscale_image(self._model.image)
+
+            # Create the moving average kernel
+            kernel = IF.create_moving_average_kernel(kernel_size)
+
+            # Apply the filter
+            filtered_img = IF.apply_filter_in_spatial_domain(grayscale_image, kernel, edge_handling=border_type)
+
+            # Update the model with the filtered image
+            self._model.image = Utilities.ensure_three_channel_grayscale_image(filtered_img)
+        except Exception as e:
+            print(f"Error applying Moving Average Filter: {e}")
+            logging.error(f"Error applying Moving Average Filter: {e}", exc_info=True)
+            raise
 
     def apply_moving_avg_filter_integral(self, kernel_size):
         img = IF.applyMovingAverageFilterWithIntegralImage(self._model.input_image, kernel_size)
