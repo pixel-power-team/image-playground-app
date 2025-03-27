@@ -8,8 +8,8 @@ class ImageModel(QObject):
     image_changed = pyqtSignal(np.ndarray)
     input_image_changed = pyqtSignal(np.ndarray)
 
-    _image = None          #output image
-    _input_image = None    #input image (backup)
+    _image: np.ndarray = None          #output image
+    _input_image: np.ndarray = None    #input image (backup)
 
     def __init__(self):
         super().__init__()
@@ -37,7 +37,7 @@ class ImageModel(QObject):
         self.input_image_changed.emit(img)
 
     def initialize(self):
-        image = np.zeros((256, 256, 3), np.uint8)
+        image: np.ndarray = np.zeros((256, 256, 3), np.uint8)
         image[:, 0:256//2] = (255, 0, 0)
         image[:, 256//2:256] = (0, 0, 255)
         self.input_image = image
