@@ -238,9 +238,12 @@ class MainView(QMainWindow):
     def update_image(self):
         frame = self._model.image
         size = self._ui.label_output_image.size()
-        #qt_img = convert_cv_qt(frame, size.width(), size.height())
+
+        # Ensure the image has 3 channels before converting to QPixmap
+        if len(frame.shape) == 2:  # Grayscale image
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
+
         qt_img = convert_cv2scaledqt(frame, size.width(), size.height())
-        #self._ui.label_output_image.loadImage(qt_img)
         self._ui.label_output_image.setPixmap(qt_img)
 
     def update_input_image(self):
@@ -388,7 +391,11 @@ def convert_cv_qt(cv_img, display_width, display_height):
     return QPixmap.fromImage(p)
 
 def convert_cv2scaledqt(cv_img, display_width, display_height):
-    """Convert from an opencv image to QPixmap"""
+    """Convert from an OpenCV image to QPixmap"""
+    # Ensure the image has 3 channels before processing
+    if len(cv_img.shape) == 2:  # Grayscale image
+        cv_img = cv2.cvtColor(cv_img, cv2.COLOR_GRAY2RGB)
+
     h, w, ch = cv_img.shape
     bytes_per_line = ch * w
     convert_to_Qt_format = QtGui.QImage(cv_img.data, w, h, bytes_per_line, QtGui.QImage.Format.Format_RGB888)

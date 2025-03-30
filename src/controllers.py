@@ -124,12 +124,15 @@ class MainController():
         self._model.image = IF.applyBorderHandling(self._model.input_image, border_type)
 
     def apply_gaussian_filter(self, kernel_size, border_type="Reflect"):
-        # Logs the selected edge handling method for debugging purposes.
+        # Convert the image to grayscale temporarily for the Gaussian filter
         print(f"[DEBUG] Applying Gaussian Filter with edge handling: {border_type}")
-        # Calls the ImageFiltering module to apply the Gaussian filter with the specified edge handling.
-        img = IF.applyGaussianFilter(self._model.input_image, kernel_size, border_type=border_type)
-        # Ensures the resulting image has three channels and updates the model.
-        self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
+        grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
+
+        # Apply the Gaussian filter
+        filtered_img = IF.applyGaussianFilter(grayscale_image, kernel_size, border_type=border_type)
+
+        # Convert the filtered image back to 3-channel RGB for display
+        self._model.image = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2RGB)
 
     def apply_moving_avg_filter(self, kernel_size, border_type="Reflect"):
         try:
