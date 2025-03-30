@@ -108,9 +108,12 @@ def applyGaussianFilter(img, kSize=5, sigma=1.0, border_type="Reflect"):
     kernel = createGaussianKernel(kSize, sigma)
 
     # Faltung durchführen
-    filtered_img = cv2.filter2D(img_with_border, -1, kernel, borderType=cv2.BORDER_DEFAULT)
-    print(f"[DEBUG] Gaussian Filter applied successfully with edge handling: {border_type}")
+    filtered_img_with_border = cv2.filter2D(img_with_border, -1, kernel, borderType=cv2.BORDER_DEFAULT)
 
+    # Remove the border to restore the original dimensions
+    filtered_img = filtered_img_with_border[1:-1, 1:-1]
+
+    print(f"[DEBUG] Gaussian Filter applied successfully with edge handling: {border_type}")
     return filtered_img
 
 def applyGaussianFilterWithEdgeHandling(img_path, output_path, kernel_size=5, sigma=1.0, border_type="Spiegeln"):
