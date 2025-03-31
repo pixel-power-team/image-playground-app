@@ -154,13 +154,33 @@ class MainController():
         img = IF.applyMedianFilter(self._model.input_image, kernel_size, borderType=border_type)
         self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
 
-    def apply_filter_sobelX(self):
-        img = IF.applySobelXFilter(self._model.input_image)
-        self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
+    def apply_filter_sobelX(self, border_type_ui="Reflect"):
+        print(f"[DEBUG] Applying Sobel X Filter with edge handling: {border_type_ui}")
+        # Convert the image to grayscale
+        grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
 
-    def apply_filter_sobelY(self):
-        img = IF.applySobelYFilter(self._model.input_image)
-        self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
+        # Apply the Sobel X filter
+        filtered_img = IF.applySobelFilter(grayscale_image, direction="x", border_type_ui=border_type_ui)
+
+        # Normalize the filtered image to the range 0–255 for display
+        normalized_img = cv2.normalize(filtered_img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+
+        # Convert the normalized image back to 3-channel RGB for display
+        self._model.image = cv2.cvtColor(normalized_img, cv2.COLOR_GRAY2RGB)
+
+    def apply_filter_sobelY(self, border_type_ui="Reflect"):
+        print(f"[DEBUG] Applying Sobel Y Filter with edge handling: {border_type_ui}")
+        # Convert the image to grayscale
+        grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
+
+        # Apply the Sobel Y filter
+        filtered_img = IF.applySobelFilter(grayscale_image, direction="y", border_type_ui=border_type_ui)
+
+        # Normalize the filtered image to the range 0–255 for display
+        normalized_img = cv2.normalize(filtered_img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+
+        # Convert the normalized image back to 3-channel RGB for display
+        self._model.image = cv2.cvtColor(normalized_img, cv2.COLOR_GRAY2RGB)
 
     def run_runtime_evaluation(self):
         IF.run_runtime_evaluation(self._model.input_image)

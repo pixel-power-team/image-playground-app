@@ -95,20 +95,78 @@ def applyGaussianFilter(img, kSize=5, sigma=1.0, border_type="Reflect"):
 ######################################################################
 # Sobel Filter
 def createSobelXKernel():
-    print("Sobel X Kernel erstellt")
-    pass
+    """Creates the Sobel kernel for the x direction."""
+    kernel = np.array([[-1, 0, 1],
+                       [-2, 0, 2],
+                       [-1, 0, 1]], dtype=np.float32)
+    print("Sobel X Kernel erstellt:\n", kernel)
+    return kernel
 
 def createSobelYKernel():
-    print("Sobel Y Kernel erstellt")
-    pass
+    """Creates the Sobel kernel for the y direction."""
+    kernel = np.array([[-1, -2, -1],
+                       [0,  0,  0],
+                       [1,  2,  1]], dtype=np.float32)
+    print("Sobel Y Kernel erstellt:\n", kernel)
+    return kernel
 
-def applySobelFilter(img, direction="x", borderType=cv2.BORDER_REFLECT):
-    print(f"Applying Sobel Filter in {direction}-Richtung")
-    pass
+def applySobelFilter(img, direction="x", border_type_ui="Reflect"):
+    """
+    Applies the Sobel filter in the specified direction with the given border handling.
+    Args:
+        img (numpy.ndarray): Input grayscale image.
+        direction (str): "x" for horizontal gradients, "y" for vertical gradients.
+        border_type_ui (str): Border handling method ("Spiegeln", "Extrapolieren", "Zyklisch", "Nullen").
+    Returns:
+        numpy.ndarray: Image with Sobel filter applied (raw gradient values).
+    """
+    print(f"[INFO] Applying Sobel Filter in {direction}-direction with border='{border_type_ui}'")
 
-def applyKernelInSpatialDomain(img, kernel, borderType=cv2.BORDER_REFLECT):
-    print("Applying kernel in spatial domain")
-    pass
+    # Select the appropriate Sobel kernel
+    if direction == "x":
+        kernel = createSobelXKernel()
+    elif direction == "y":
+        kernel = createSobelYKernel()
+    else:
+        raise ValueError("Invalid direction. Use 'x' or 'y'.")
+
+    # Apply border handling
+    margin = kernel.shape[0] // 2  # Calculate the margin based on the kernel size
+    img_padded = apply_border_handling(img, border_type_ui, border_size=margin)
+
+    # Apply the Sobel filter using convolution
+    filtered = cv2.filter2D(img_padded, cv2.CV_32F, kernel)  # Use CV_32F to preserve gradient values
+
+    # Remove the border to restore the original dimensions
+    result = filtered[margin:-margin, margin:-margin]
+
+    print(f"[INFO] Sobel Filter applied successfully in {direction}-direction.")
+    return result
+
+def applyKernelInSpatialDomain(img, kernel, border_type_ui="Reflect"):
+    """
+    Applies a custom kernel to an image in the spatial domain with the specified border handling.
+    Args:
+        img (numpy.ndarray): Input grayscale image.
+        kernel (numpy.ndarray): Kernel to apply.
+        border_type_ui (str): Border handling method ("Spiegeln", "Extrapolieren", "Zyklisch", "Nullen").
+    Returns:
+        numpy.ndarray: Image with the kernel applied.
+    """
+    print(f"[INFO] Applying custom kernel with border='{border_type_ui}'")
+
+    # Apply border handling
+    margin = kernel.shape[0] // 2  # Calculate the margin based on the kernel size
+    img_padded = apply_border_handling(img, border_type_ui, border_size=margin)
+
+    # Apply the kernel using convolution
+    filtered = cv2.filter2D(img_padded, -1, kernel)
+
+    # Remove the border to restore the original dimensions
+    result = filtered[margin:-margin, margin:-margin]
+
+    print(f"[INFO] Custom kernel applied successfully.")
+    return result
 
 ######################################################################
 # Extra: create an integral image of the given image

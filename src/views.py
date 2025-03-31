@@ -319,14 +319,24 @@ class MainView(QMainWindow):
         return selected_method
 
     def on_filter_sobelX_button_clicked(self):
-        border_type = self.get_selected_border_handling()
-        self._main_controller.apply_filter_sobelX(border_type)
-        self.on_image_changed()
+        try:
+            border_type = self.get_selected_border_handling()
+            print(f"Applying Sobel X Filter with border type: {border_type}")
+            self._main_controller.apply_filter_sobelX(border_type)
+            self.on_image_changed()
+        except Exception as e:
+            print(f"Error in Sobel X Filter: {e}")
+            logging.error(f"Error in Sobel X Filter: {e}", exc_info=True)
 
     def on_filter_sobelY_button_clicked(self):
-        border_type = self.get_selected_border_handling()
-        self._main_controller.apply_filter_sobelY(border_type)
-        self.on_image_changed()
+        try:
+            border_type = self.get_selected_border_handling()
+            print(f"Applying Sobel Y Filter with border type: {border_type}")
+            self._main_controller.apply_filter_sobelY(border_type)
+            self.on_image_changed()
+        except Exception as e:
+            print(f"Error in Sobel Y Filter: {e}")
+            logging.error(f"Error in Sobel Y Filter: {e}", exc_info=True)
 
     def on_filter_gauss_button_clicked(self):
         try:
