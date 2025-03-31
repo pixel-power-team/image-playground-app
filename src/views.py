@@ -313,16 +313,10 @@ class MainView(QMainWindow):
     # Übung 3
     #####################
     def get_selected_border_handling(self):
-        """Returns the selected edge handling method."""
-        # Retrieves the currently selected method from the dropdown.
-        selected_method = self._ui.comboBox_border_handling.currentData()
-        # Validates that the selected method is one of the supported methods.
-        if selected_method in ["Extrapolieren", "Spiegeln", "Zyklisch", "Nullen"]:
-            return selected_method
-        else:
-            # If the selected method is invalid, default to "Spiegeln" and log a warning.
-            print("[WARNING] Selected edge handling method is not valid. Defaulting to 'Spiegeln'.")
-            return "Spiegeln"
+        """Returns the selected edge handling method from the dropdown."""
+        selected_method = self._ui.comboBox_border_handling.currentText()  # Get the selected text
+        print(f"[DEBUG] Selected border handling method: {selected_method}")
+        return selected_method
 
     def on_filter_sobelX_button_clicked(self):
         border_type = self.get_selected_border_handling()

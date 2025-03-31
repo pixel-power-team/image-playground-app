@@ -123,34 +123,24 @@ class MainController():
     def apply_boarder_handling(self, border_type):
         self._model.image = IF.applyBorderHandling(self._model.input_image, border_type)
 
-    def apply_gaussian_filter(self, kernel_size, border_type="Reflect"):
+    def apply_gaussian_filter(self, kernel_size, border_type_ui="Reflect"):
         # Convert the image to grayscale temporarily for the Gaussian filter
-        print(f"[DEBUG] Applying Gaussian Filter with edge handling: {border_type}")
+        print(f"[DEBUG] Applying Gaussian Filter with edge handling: {border_type_ui}")
         grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
 
         # Apply the Gaussian filter
-        filtered_img = IF.applyGaussianFilter(grayscale_image, kernel_size, border_type=border_type)
+        filtered_img = IF.applyGaussianFilter(grayscale_image, kernel_size, border_type=border_type_ui)
 
         # Convert the filtered image back to 3-channel RGB for display
         self._model.image = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2RGB)
 
-    def apply_moving_avg_filter(self, kernel_size, border_type="Reflect"):
+    def apply_moving_avg_filter(self, kernel_size, border_type_ui="Reflect"):
         try:
-            # Defaults to "Reflect" if no edge handling method is provided.
-            if not border_type:
-                border_type = "Reflect"
-            # Logs the selected edge handling method for debugging purposes.
-            print(f"[DEBUG] Applying Moving Average Filter with edge handling: {border_type}")
-            # Converts the image to grayscale for filtering.
+            print(f"[DEBUG] Applying Moving Average Filter with edge handling: {border_type_ui}")
             grayscale_image = Utilities.ensure_one_channel_grayscale_image(self._model.image)
-            # Creates the moving average kernel.
-            kernel = IF.create_moving_average_kernel(kernel_size)
-            # Applies the filter in the spatial domain with the specified edge handling.
-            filtered_img = IF.apply_filter_in_spatial_domain(grayscale_image, kernel, edge_handling=border_type)
-            # Ensures the resulting image has three channels and updates the model.
+            filtered_img = IF.apply_moving_average_filter(grayscale_image, kSize=kernel_size, border_type_ui=border_type_ui)
             self._model.image = Utilities.ensure_three_channel_grayscale_image(filtered_img)
         except Exception as e:
-            # Logs any errors encountered during the filtering process.
             print(f"[ERROR] Error applying Moving Average Filter: {e}")
             logging.error(f"Error applying Moving Average Filter: {e}", exc_info=True)
             raise
