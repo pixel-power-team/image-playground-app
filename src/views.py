@@ -57,18 +57,6 @@ class MainView(QMainWindow):
         self._ui.widget_histogram.controller = self._main_controller
 
 
-        ####################
-        # Input validators
-        ####################
-        # Create a regular expression that matches integer values between 1 and infinity
-        regex = QRegularExpression("[1-9][0-9]*")
-        # Create a validator based on the regular expression
-        validator = QRegularExpressionValidator(regex)
-        # Set the validator for the line edit widget
-        self._ui.lineEdit_image_height.setValidator(validator)
-        self._ui.lineEdit_image_width.setValidator(validator)
-
-
         ####################################################################
         #   connect widgets to controllers
         ####################################################################
@@ -344,10 +332,6 @@ class MainView(QMainWindow):
             kernel_size = self._ui.spinBox_filter_avg_size.value()
             border_type = self.get_selected_border_handling()
 
-            # Validate kernel size
-            if kernel_size % 2 == 0 or kernel_size <= 0:
-                raise ValueError("Kernel size must be a positive odd integer.")
-
             # Apply the Gaussian filter
             print(f"Applying Gaussian Filter with kernel size: {kernel_size}, border type: {border_type}")
             self._main_controller.apply_gaussian_filter(kernel_size, border_type)
@@ -363,9 +347,6 @@ class MainView(QMainWindow):
             border_type = self.get_selected_border_handling()
             if not border_type:
                 border_type = "Reflect"  # Default to "Reflect" if no edge handling is selected
-            # Validate kernel size
-            if kernel_size % 2 == 0 or kernel_size <= 0:
-                raise ValueError("Kernel size must be a positive odd integer.")
             # Apply the moving average filter
             print(f"Applying Moving Average Filter with kernel size: {kernel_size}, border type: {border_type}")
             self._main_controller.apply_moving_avg_filter(kernel_size, border_type)

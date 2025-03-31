@@ -35,9 +35,35 @@ def apply_border_handling(img, border_type_ui, border_size=1, constant_value=0):
 
 # apply median filter
 # Median Filter
-def applyMedianFilter(img, kSize, borderType="spiegeln"):
-    print("Applying Median Filter")
-    pass
+def applyMedianFilter(img, kSize, border_type_ui="Spiegeln"):
+    """
+    Applies a median filter to the image with the specified border handling.
+    Args:
+        img (numpy.ndarray): Input image (grayscale).
+        kSize (int): Kernel size (must be odd).
+        border_type_ui (str): Border handling method ("Spiegeln", "Extrapolieren", "Zyklisch", "Nullen").
+    Returns:
+        numpy.ndarray: Image with the median filter applied.
+    """
+    print(f"[INFO] Applying Median Filter with kSize={kSize}, border='{border_type_ui}'")
+
+    # Validate kernel size
+    if kSize % 2 == 0 or kSize <= 0:
+        raise ValueError("Kernel size must be a positive odd integer.")
+
+    # Apply border handling
+    margin = kSize // 2  # Calculate the margin based on the kernel size
+    img_padded = apply_border_handling(img, border_type_ui, border_size=margin)
+
+    # Apply the median filter
+    filtered = cv2.medianBlur(img_padded, kSize)
+
+    # Remove the border to restore the original dimensions
+    result = filtered[margin:-margin, margin:-margin]
+
+    print(f"[INFO] Median Filter applied successfully.")
+    return result
+
 ######################################################################
 
 # Moving Average Filter

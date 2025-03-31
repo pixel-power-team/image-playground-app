@@ -136,10 +136,19 @@ class MainController():
 
     def apply_moving_avg_filter(self, kernel_size, border_type_ui="Reflect"):
         try:
+            # Check if the kernel size is even
+            if kernel_size % 2 == 0:
+                print("[WARNING] Kernel size must be an odd number. Please use an odd value.")
+
             print(f"[DEBUG] Applying Moving Average Filter with edge handling: {border_type_ui}")
-            grayscale_image = Utilities.ensure_one_channel_grayscale_image(self._model.image)
+            # Convert the current image to grayscale
+            grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
+
+            # Apply the moving average filter
             filtered_img = IF.apply_moving_average_filter(grayscale_image, kSize=kernel_size, border_type_ui=border_type_ui)
-            self._model.image = Utilities.ensure_three_channel_grayscale_image(filtered_img)
+
+            # Convert the filtered image back to 3-channel RGB for display
+            self._model.image = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2RGB)
         except Exception as e:
             print(f"[ERROR] Error applying Moving Average Filter: {e}")
             logging.error(f"Error applying Moving Average Filter: {e}", exc_info=True)
@@ -149,10 +158,20 @@ class MainController():
         img = IF.applyMovingAverageFilterWithIntegralImage(self._model.input_image, kernel_size)
         self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
 
-    def apply_median_filter(self, kernel_size, border_type="Reflect"):
-        print(f"[DEBUG] Applying Median Filter with edge handling: {border_type}")
-        img = IF.applyMedianFilter(self._model.input_image, kernel_size, borderType=border_type)
-        self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
+    def apply_median_filter(self, kernel_size, border_type_ui="Reflect"):
+        # Check if the kernel size is even
+        if kernel_size % 2 == 0:
+            print("[WARNING] Kernel size must be an odd number. Please use an odd value.")
+
+        print(f"[DEBUG] Applying Median Filter with edge handling: {border_type_ui}")
+        # Use the current image (self._model.image) instead of the input image
+        grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
+
+        # Apply the median filter
+        filtered_img = IF.applyMedianFilter(grayscale_image, kernel_size, border_type_ui=border_type_ui)
+
+        # Convert the filtered image back to 3-channel RGB for display
+        self._model.image = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2RGB)
 
     def apply_filter_sobelX(self, border_type_ui="Reflect"):
         print(f"[DEBUG] Applying Sobel X Filter with edge handling: {border_type_ui}")
@@ -176,10 +195,10 @@ class MainController():
         # Apply the Sobel Y filter
         filtered_img = IF.applySobelFilter(grayscale_image, direction="y", border_type_ui=border_type_ui)
 
-        # Normalize the filtered image to the range 0–255 for display
+        #Extra: Normalize the filtered image to the range 0–255 for display
         normalized_img = cv2.normalize(filtered_img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
 
-        # Convert the normalized image back to 3-channel RGB for display
+        #Extra: Convert the normalized image back to 3-channel RGB for display
         self._model.image = cv2.cvtColor(normalized_img, cv2.COLOR_GRAY2RGB)
 
     def run_runtime_evaluation(self):
