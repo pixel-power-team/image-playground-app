@@ -120,6 +120,8 @@ class MainController():
     #####################################
     # Übung 3
     #####################################
+# Reflect is the fallback because it works even if the UI choice breaks or something goes wrong.
+
     def apply_boarder_handling(self, border_type):
         self._model.image = IF.applyBorderHandling(self._model.input_image, border_type)
 
