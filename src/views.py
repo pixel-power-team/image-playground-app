@@ -98,17 +98,8 @@ class MainView(QMainWindow):
         self._ui.pushButton_filter_movAvg_int.clicked.connect(self.on_filter_moving_avg_integral_button_clicked)
         self._ui.pushButton_filter_median.clicked.connect(self.on_filter_median_button_clicked)
         self._ui.pushButton_filter_evaluation.clicked.connect(self.on_runtime_evaluation_button_clicked)
-        #
-        # # Dropdown-Menü für Randbehandlung hinzufügen
-        # self._ui.comboBox_border_handling = QComboBox(self)
-        # self._ui.comboBox_border_handling.addItem("Extrapolieren", cv2.BORDER_REPLICATE)
-        # self._ui.comboBox_border_handling.addItem("Spiegeln", cv2.BORDER_REFLECT)
-        # self._ui.comboBox_border_handling.addItem("Zyklisch", cv2.BORDER_WRAP)
-        # self._ui.comboBox_border_handling.addItem("Nullen", cv2.BORDER_CONSTANT)
-        # # UI in das Layout integrieren
-        # self._ui.layout_filter_options.addWidget(self._ui.comboBox_border_handling)
-        # # Standardauswahl
-        # self._ui.comboBox_border_handling.setCurrentIndex(1)
+        self._ui.pushButton_filter_movAvg_sep.clicked.connect(self.on_filter_moving_avg_sep_button_clicked)
+        self._ui.pushButton_filter_movAvg_conv.clicked.connect(self.on_filter_moving_avg_conv_button_clicked)
 
         ####################################################################
         #   listen for model event signals
@@ -366,7 +357,28 @@ class MainView(QMainWindow):
 
     def on_runtime_evaluation_button_clicked(self):
         self._main_controller.run_runtime_evaluation()
+    
+    def on_filter_moving_avg_sep_button_clicked(self):
+        self._main_controller.apply_moving_avg_filter_separated(self._ui.spinBox_filter_avg_size.value())
+        self.on_image_changed()
 
+    def on_filter_moving_avg_conv_button_clicked(self):
+        """
+        Handles the button click for applying the moving average filter using manual convolution.
+        Retrieves the kernel size and border type from the UI and passes them to the controller.
+        """
+        try:
+            # Retrieve kernel size and border type from the UI
+            kernel_size = self._ui.spinBox_filter_avg_size.value()
+            border_type = self.get_selected_border_handling()
+
+            print(f"[DEBUG] Applying Moving Average Filter with Convolution: kernel_size={kernel_size}, border_type={border_type}")
+            self._main_controller.apply_moving_avg_filter_convolution(kernel_size, border_type)
+            self.on_image_changed()
+        except Exception as e:
+            print(f"[ERROR] Error in Moving Average Filter with Convolution: {e}")
+            logging.error(f"Error in Moving Average Filter with Convolution: {e}", exc_info=True)
+        
 def convert_cv_qt(cv_img, display_width, display_height):
     """Convert from an opencv image to QPixmap"""
     h, w, ch = cv_img.shape
