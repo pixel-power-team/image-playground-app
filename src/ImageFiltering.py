@@ -1,62 +1,212 @@
 import time
-
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime as dt
 import cv2
 import Utilities
 
+####################################################################################################
+# zusätzliche Funktionen
+####################################################################################################
 
-# apply median filter
-def applyMedianFilter(img, kSize):
-    filtered_img = img.copy()
-    return filtered_img
+def map_border_type(border_type_ui):
+    mapping = {
+        "Spiegeln": cv2.BORDER_REFLECT,
+        "Extrapolieren": cv2.BORDER_REPLICATE,
+        "Zyklisch": cv2.BORDER_WRAP,
+        "Nullen": cv2.BORDER_CONSTANT
+    }
+    return mapping.get(border_type_ui, cv2.BORDER_REFLECT)
 
+def apply_border_handling(img, border_type_ui, border_size=1, constant_value=0):
+    border_type_cv = map_border_type(border_type_ui)
+    print(f"[DEBUG] Applying border handling: {border_type_ui} ({border_type_cv})")
+    return cv2.copyMakeBorder(img, border_size, border_size, border_size, border_size,
+                              border_type_cv, value=constant_value)
 
-# create a moving average kernel of arbitrary size
-def createMovingAverageKernel(kSize):
-    kernel = np.zeros((kSize, kSize))
-    return kernel
+def custom_convolution(img, kernel):
+    """
+    Custom convolution function to replace OpenCV's cv2.filter2D.
+    This manually applies the kernel to the image by iterating over each pixel.
+    """
+    # Ensure the image is single-channel grayscale
+    if len(img.shape) > 2:
+        print("[DEBUG] Converting multi-channel image to grayscale for convolution.")
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
-
-def gaussian( x, y, sigmaX, sigmaY, meanX, meanY):
-    result = 1
+    img_h, img_w = img.shape
+    k_h, k_w = kernel.shape
+    result = np.zeros_like(img, dtype=np.float32)
+    offset_h = k_h // 2
+    offset_w = k_w // 2
+    for i in range(offset_h, img_h - offset_h):
+        for j in range(offset_w, img_w - offset_w):
+            region = img[i - offset_h:i + offset_h + 1, j - offset_w:j + offset_w + 1]
+            result[i, j] = np.sum(region * kernel)
     return result
 
-
-# create a gaussian kernel of arbitrary size
-def createGaussianKernel(kSize, sigma=None):
-    kernel = np.zeros((kSize, kSize))
-    return kernel
-
-
-# create a sobel kernel in x direction of size 3x3
-def createSobelXKernel():
-    kernel = np.zeros((3, 3))
-    return kernel
-
-# create a sobel kernel in y direction of size 3x3
-def createSobelYKernel():
-    kernel = np.zeros((3, 3))
-    return kernel
-
-# 2D convolution in spatial domain
-def applyKernelInSpatialDomain(img, kSize):
+def custom_median_filter(img, kSize):
     """
-    # Function will be implemented by Charlotte in Aufgabe 3 without using OpenCV (cv2)
+    Custom median filter function to replace OpenCV's cv2.medianBlur.
+    This manually calculates the median value for each pixel's neighborhood.
     """
-    img = Utilities.ensure_one_channel_grayscale_image(img)
-    
+    img_h, img_w = img.shape
+    result = np.zeros_like(img, dtype=img.dtype)
+    offset = kSize // 2
+    for i in range(offset, img_h - offset):
+        for j in range(offset, img_w - offset):
+            region = img[i - offset:i + offset + 1, j - offset:j + offset + 1]
+            result[i, j] = np.median(region)
+    return result
 
-    # Create a moving average kernel (all values are equal to 1 / (kSize * kSize))
-    kernel = np.ones((kSize, kSize), np.float32) / (kSize * kSize)
+####################################################################################################
+# Median Filter
+####################################################################################################
 
-    # Apply the convolution using OpenCV (efficient implementation)
-    filtered_img = cv2.filter2D(img, -1, kernel, borderType=cv2.BORDER_REFLECT)
+def applyMedianFilter(img, kSize, border_type_ui="Spiegeln"):
+    """
+    Applies a median filter using the custom_median_filter function.
+    This avoids using OpenCV's cv2.medianBlur.
+    """
+    print(f"[INFO] Applying Median Filter with kSize={kSize}, border='{border_type_ui}'")
+    if kSize % 2 == 0 or kSize <= 0:
+        raise ValueError("Kernel size must be a positive odd integer.")
+    margin = kSize // 2
+    img_padded = apply_border_handling(img, border_type_ui, border_size=margin)
+    filtered = custom_median_filter(img_padded, kSize)
+    result = filtered[margin:-margin, margin:-margin]
+    print(f"[INFO] Median Filter applied successfully.")
+    return result
 
+####################################################################################################
+# Moving Average Filter
+####################################################################################################
+
+def create_moving_average_kernel(kSize):
+    if kSize % 2 == 0:
+        raise ValueError("Kernel size must be odd.")
+    return np.ones((kSize, kSize), dtype=np.float32) / (kSize * kSize)
+
+def apply_moving_average_filter(img, kSize=3, border_type_ui="Spiegeln"):
+    """
+    Applies a moving average filter using the custom_convolution function.
+    This avoids using OpenCV's cv2.filter2D.
+    """
+    print(f"[INFO] Moving Average Filter: kSize={kSize}, border='{border_type_ui}'")
+    margin = kSize // 2
+    img_padded = apply_border_handling(img, border_type_ui, border_size=margin)
+    kernel = create_moving_average_kernel(kSize)
+    filtered = custom_convolution(img_padded, kernel)
+    return filtered[margin:-margin, margin:-margin]
+
+####################################################################################################
+# Gaussian Filter
+####################################################################################################
+
+def createGaussianKernel(kSize, sigma=1.0):
+    print(f"Generiere Gau\u00df-Kernel mit kSize={kSize}, sigma={sigma}")
+    ax = np.linspace(-(kSize // 2), kSize // 2, kSize)
+    xx, yy = np.meshgrid(ax, ax)
+    kernel = np.exp(- (xx**2 + yy**2) / (2 * sigma**2))
+    kernel /= np.sum(kernel)
+    print("Gau\u00df-Kernel erzeugt:\n", kernel)
+    return kernel
+
+def applyGaussianFilter(img, kSize=5, sigma=1.0, border_type="Spiegeln"):
+    """
+    Applies a Gaussian filter using the custom_convolution function.
+    This avoids using OpenCV's cv2.filter2D.
+    """
+    print(f"[DEBUG] Applying Gaussian Filter with edge handling: {border_type}")
+    margin = kSize // 2
+    img_with_border = apply_border_handling(img, border_type, border_size=margin)
+    kernel = createGaussianKernel(kSize, sigma)
+    filtered_img_with_border = custom_convolution(img_with_border, kernel)
+    filtered_img = filtered_img_with_border[margin:-margin, margin:-margin]
+    print(f"[DEBUG] Gaussian Filter applied successfully with edge handling: {border_type}")
     return filtered_img
 
+####################################################################################################
+# Sobel Filter
+####################################################################################################
 
+def createSobelXKernel():
+    kernel = np.array([[-1, 0, 1],
+                       [-2, 0, 2],
+                       [-1, 0, 1]], dtype=np.float32)
+    print("Sobel X Kernel erstellt:\n", kernel)
+    return kernel
+
+def createSobelYKernel():
+    kernel = np.array([[-1, -2, -1],
+                       [0,  0,  0],
+                       [1,  2,  1]], dtype=np.float32)
+    print("Sobel Y Kernel erstellt:\n", kernel)
+    return kernel
+
+def applySobelFilter(img, direction="x", border_type_ui="Spiegeln"):
+    """
+    Applies the Sobel filter using the custom_convolution function.
+    This avoids using OpenCV's cv2.filter2D.
+    """
+    print(f"[INFO] Applying Sobel Filter in {direction}-direction with border='{border_type_ui}'")
+    if direction == "x":
+        kernel = createSobelXKernel()
+    elif direction == "y":
+        kernel = createSobelYKernel()
+    else:
+        raise ValueError("Invalid direction. Use 'x' or 'y'.")
+    margin = kernel.shape[0] // 2
+    img_padded = apply_border_handling(img, border_type_ui, border_size=margin)
+    filtered = custom_convolution(img_padded, kernel)
+    result = filtered[margin:-margin, margin:-margin]
+    print(f"[INFO] Sobel Filter applied successfully in {direction}-direction.")
+    return result
+
+####################################################################################################
+# Custom Kernel Application
+####################################################################################################
+
+def applyKernelInSpatialDomain(img, kernel_size, border_type_ui):
+    """
+    Applies a custom kernel to an image in the spatial domain using manual convolution.
+    This function avoids using OpenCV's cv2.filter2D and performs the convolution manually.
+
+    Args:
+        img (numpy.ndarray): Input grayscale image.
+        kernel_size (int): The size of the kernel (must be odd).
+        border_type_ui (str): Border handling method ("Spiegeln", "Extrapolieren", "Zyklisch", "Nullen").
+
+    Returns:
+        numpy.ndarray: The filtered image after applying the kernel.
+    """
+    print(f"[INFO] Applying custom kernel with kernel_size={kernel_size}, border='{border_type_ui}'")
+
+    # Ensure kernel_size is odd
+    if kernel_size % 2 == 0:
+        raise ValueError("Kernel size must be an odd number.")
+
+    # Create a moving average kernel
+    kernel = np.ones((kernel_size, kernel_size), dtype=np.float32) / (kernel_size * kernel_size)
+
+    # Calculate the margin (padding size) based on the kernel size
+    margin = kernel.shape[0] // 2
+
+    # Apply border handling to pad the image
+    img_padded = apply_border_handling(img, border_type_ui, border_size=margin)
+
+    # Perform manual convolution using the custom_convolution function
+    filtered = custom_convolution(img_padded, kernel)
+
+    # Remove the border to restore the original image dimensions
+    result = filtered[margin:-margin, margin:-margin]
+
+    print(f"[INFO] Custom kernel applied successfully.")
+    return result
+
+########################################################################################################
+#Zusatzaufgabe:
+######################################################################################################
 # Extra: create an integral image of the given image
 # to speed up further calculations
 def createIntegralImage(img: np.ndarray):
@@ -188,19 +338,20 @@ def applyMovingAverageFilterWithSeperatedKernels(img, kSize):
     return img_blur.astype(np.uint8)
 
 
-def run_runtime_evaluation(img: np.ndarray):
+def run_runtime_evaluation(img: np.ndarray, border_type_ui="Spiegeln"):
     """
     Evaluates and compares the runtime of different Moving Average filter implementations.
 
     Args:
         img (numpy.ndarray): Image to filter.
+        border_type_ui (str): Border handling method ("Spiegeln", "Extrapolieren", etc.).
 
     Plots the execution time for different kernel sizes (w).
     """
     # (start=3, stop=16, step=2) => w = 3, 5, 7, ..., 15
     kernel_sizes = list(range(3, 16, 2))
     methods = {
-        "Naive Convolution": applyKernelInSpatialDomain,
+        "Naive Convolution": lambda img, w: applyKernelInSpatialDomain(img, w, border_type_ui),
         "Separable Kernels": applyMovingAverageFilterWithSeperatedKernels,
         "Integral Image": applyMovingAverageFilterWithIntegralImage
     }
@@ -208,12 +359,12 @@ def run_runtime_evaluation(img: np.ndarray):
     runtimes = {method: [] for method in methods}
 
     for w in kernel_sizes:
-        for method_name, method in methods.items(): # Iterate over the methods
-            start_time = time.perf_counter() # Start the timer
+        for method_name, method in methods.items():  # Iterate over the methods
+            start_time = time.perf_counter()  # Start the timer
             method(img, w)  # Apply the filter
-            end_time = time.perf_counter() # Stop the timer
+            end_time = time.perf_counter()  # Stop the timer
 
-            runtime = end_time - start_time # Compute the runtime
+            runtime = end_time - start_time  # Compute the runtime
             runtimes[method_name].append(runtime)
 
     # Plot the results

@@ -27,7 +27,7 @@ class ImageModel(QObject):
     def image(self, img):
         self._image = img.copy()
         print("M: image changed!")
-        # update in model is reflected in view by sending a signal to view
+        # update in model is Spiegelned in view by sending a signal to view
         self.image_changed.emit(img)
 
     @input_image.setter

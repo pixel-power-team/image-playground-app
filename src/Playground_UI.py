@@ -469,7 +469,28 @@ class Ui_MainWindow(object):
         self.tab_widget_image.setCurrentIndex(0)
         self.tabWidget_controller.setCurrentIndex(0)
         self.tabWidget_analysis.setCurrentIndex(0)
+        # Neues Layout für Filteroptionen erstellen
+        self.layout_filter_options = QtWidgets.QVBoxLayout()
+        self.layout_filter_options.setObjectName("layout_filter_options")
+
+        # Combobox für Randbehandlung
+        self.comboBox_border_handling = QtWidgets.QComboBox()
+        self.comboBox_border_handling.setObjectName("comboBox_border_handling")
+        self.comboBox_border_handling.addItems(["Extrapolieren", "Spiegeln", "Zyklisch", "Nullen"])
+
+        # Label für bessere UI
+        self.label_border_handling = QtWidgets.QLabel("Randbehandlung:")
+        self.label_border_handling.setObjectName("label_border_handling")
+
+        # Elemente zum Layout hinzufügen
+        self.layout_filter_options.addWidget(self.label_border_handling)
+        self.layout_filter_options.addWidget(self.comboBox_border_handling)
+
+        # Layout an der richtigen Stelle einfügen (zum Beispiel in `self.verticalLayout_6`)
+        self.verticalLayout_6.addLayout(self.layout_filter_options)
+
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate

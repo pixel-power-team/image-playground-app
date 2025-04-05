@@ -120,46 +120,171 @@ class MainController():
     #####################################
     # Übung 3
     #####################################
+# Spiegeln is the fallback because it works even if the UI choice breaks or something goes wrong.
 
-    def apply_gaussian_filter(self, kernel_size):
-        kernel = IF.createGaussianKernel(kernel_size)
-        img = IF.applyKernelInSpatialDomain(self._model.input_image, kernel)
-        self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
+    def apply_border_handling(self, border_type):
+        self._model.image = IF.applyBorderHandling(self._model.input_image, border_type)
 
-    def apply_moving_avg_filter(self, kernel_size):
-        kernel = IF.createMovingAverageKernel(kernel_size)
-        img = IF.applyKernelInSpatialDomain(self._model.input_image, kernel)
-        self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
+    def apply_gaussian_filter(self, kernel_size, border_type_ui="Spiegeln"):
+        print(f"[DEBUG] Applying Gaussian Filter with edge handling: {border_type_ui}")
+        # Convert the image to grayscale
+        grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
+
+        # Apply the Gaussian filter
+        filtered_img = IF.applyGaussianFilter(grayscale_image, kernel_size, border_type=border_type_ui)
+
+        # Ensure the filtered image is in the correct format for display
+        filtered_img = np.clip(filtered_img, 0, 255).astype(np.uint8)
+
+        # Convert the filtered image back to 3-channel RGB for display
+        self._model.image = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2RGB)
+
+    def apply_moving_avg_filter(self, kernel_size, border_type_ui="Spiegeln"):
+        try:
+            if kernel_size % 2 == 0:
+                print("[WARNING] Kernel size must be an odd number. Please use an odd value.")
+
+            print(f"[DEBUG] Applying Moving Average Filter with edge handling: {border_type_ui}")
+            # Convert the image to grayscale
+            grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
+
+            # Apply the moving average filter
+            filtered_img = IF.apply_moving_average_filter(grayscale_image, kSize=kernel_size, border_type_ui=border_type_ui)
+
+            # Ensure the filtered image is in the correct format for display
+            filtered_img = np.clip(filtered_img, 0, 255).astype(np.uint8)
+
+            # Convert the filtered image back to 3-channel RGB for display
+            self._model.image = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2RGB)
+        except Exception as e:
+            print(f"[ERROR] Error applying Moving Average Filter: {e}")
+            logging.error(f"Error applying Moving Average Filter: {e}", exc_info=True)
+            raise
 
     def apply_moving_avg_filter_integral(self, kernel_size):
-        img = IF.applyMovingAverageFilterWithIntegralImage(self._model.input_image, kernel_size)
-        self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
+        try:
+            print(f"[DEBUG] Applying Moving Average Filter with Integral Image: kernel_size={kernel_size}")
+            # Convert the image to grayscale
+            grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
 
-    def apply_median_filter(self, kernel_size):
-        img = IF.applyMedianFilter(self._model.input_image, kernel_size)
-        self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
+            # Apply the moving average filter using integral image
+            img = IF.applyMovingAverageFilterWithIntegralImage(grayscale_image, kernel_size)
+
+            # Update the model with the filtered grayscale image
+            self._model.image = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        except Exception as e:
+            print(f"[ERROR] Error applying Moving Average Filter with Integral Image: {e}")
+            logging.error(f"Error applying Moving Average Filter with Integral Image: {e}", exc_info=True)
+            raise
 
     def apply_moving_avg_filter_separated(self, kernel_size):
-        img = IF.applyMovingAverageFilterWithSeperatedKernels(self._model.input_image, kernel_size)
-        self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
-        
-    def apply_moving_avg_filter_convolution(self, kernel_size):
-        img = IF.applyKernelInSpatialDomain(self._model.input_image, kernel_size)
-        self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
+        try:
+            print(f"[DEBUG] Applying Moving Average Filter with Separated Kernels: kernel_size={kernel_size}")
+            # Convert the image to grayscale
+            grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
 
-    def apply_filter_sobelX(self):
-        kernel = IF.createSobelXKernel()
-        img = IF.applyKernelInSpatialDomain(self._model.input_image, kernel)
-        self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
+            # Apply the moving average filter using separated kernels
+            img = IF.applyMovingAverageFilterWithSeperatedKernels(grayscale_image, kernel_size)
 
-    def apply_filter_sobelY(self):
-        kernel = IF.createSobelYKernel()
-        img = IF.applyKernelInSpatialDomain(self._model.input_image, kernel)
-        self._model.image = Utilities.ensure_three_channel_grayscale_image(img)
+            # Update the model with the filtered grayscale image
+            self._model.image = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        except Exception as e:
+            print(f"[ERROR] Error applying Moving Average Filter with Separated Kernels: {e}")
+            logging.error(f"Error applying Moving Average Filter with Separated Kernels: {e}", exc_info=True)
+            raise
 
+    def apply_median_filter(self, kernel_size, border_type_ui="Spiegeln"):
+        # Check if the kernel size is even
+        if kernel_size % 2 == 0:
+            print("[WARNING] Kernel size must be an odd number. Please use an odd value.")
+
+        print(f"[DEBUG] Applying Median Filter with edge handling: {border_type_ui}")
+        # Use the current image (self._model.image) instead of the input image
+        grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
+
+        # Apply the median filter
+        filtered_img = IF.applyMedianFilter(grayscale_image, kernel_size, border_type_ui=border_type_ui)
+
+        # Convert the filtered image back to 3-channel RGB for display
+        self._model.image = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2RGB)
+
+    def apply_filter_sobelX(self, border_type_ui="Spiegeln"):
+        print(f"[DEBUG] Applying Sobel X Filter with edge handling: {border_type_ui}")
+        # Convert the image to grayscale
+        grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
+
+        # Apply the Sobel X filter
+        filtered_img = IF.applySobelFilter(grayscale_image, direction="x", border_type_ui=border_type_ui)
+
+        # Normalize the filtered image to the range 0–255 for display
+        normalized_img = cv2.normalize(filtered_img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+
+        # Convert the normalized image back to 3-channel RGB for display
+        self._model.image = cv2.cvtColor(normalized_img, cv2.COLOR_GRAY2RGB)
+
+    def apply_filter_sobelY(self, border_type_ui="Spiegeln"):
+        print(f"[DEBUG] Applying Sobel Y Filter with edge handling: {border_type_ui}")
+        # Convert the image to grayscale
+        grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
+
+        # Apply the Sobel Y filter
+        filtered_img = IF.applySobelFilter(grayscale_image, direction="y", border_type_ui=border_type_ui)
+
+        #Extra: Normalize the filtered image to the range 0–255 for display
+        normalized_img = cv2.normalize(filtered_img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+
+        #Extra: Convert the normalized image back to 3-channel RGB for display
+        self._model.image = cv2.cvtColor(normalized_img, cv2.COLOR_GRAY2RGB)
+
+##########################################
+#zussatzaufgabe:
+#########################################
+    
+    # def apply_moving_avg_filter_separated(self, kernel_size):
+    #     try:
+    #         print(f"[DEBUG] Applying Moving Average Filter with Separated Kernels: kernel_size={kernel_size}")
+    #         # Convert the image to grayscale
+    #         grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
+
+    #         # Apply the moving average filter using separated kernels
+    #         img = IF.applyMovingAverageFilterWithSeperatedKernels(grayscale_image, kernel_size)
+
+    #         # Update the model with the filtered grayscale image
+    #         self._model.image = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+    #     except Exception as e:
+    #         print(f"[ERROR] Error applying Moving Average Filter with Separated Kernels: {e}")
+    #         logging.error(f"Error applying Moving Average Filter with Separated Kernels: {e}", exc_info=True)
+    #         raise
+
+    def apply_moving_avg_filter_convolution(self, kernel_size, border_type_ui):
+        """
+        Applies the moving average filter using manual convolution.
+        Args:
+            kernel_size (int): The size of the kernel.
+            border_type_ui (str): The border handling method selected in the UI.
+        """
+        print(f"[DEBUG] Applying Moving Average Filter with Convolution: kernel_size={kernel_size}, border_type={border_type_ui}")
+        try:
+            # Convert the input image to grayscale
+            grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
+
+            # Apply the moving average filter
+            filtered_img = IF.applyKernelInSpatialDomain(grayscale_image, kernel_size, border_type_ui)
+
+            # Ensure the filtered image is in the correct format (grayscale)
+            filtered_img = np.clip(filtered_img, 0, 255).astype(np.uint8)
+
+            # Convert the filtered image back to 3-channel RGB for display
+            self._model.image = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2RGB)
+        except ValueError as e:
+            print(f"[ERROR] ValueError in Moving Average Filter with Convolution: {e}")
+            logging.error(f"ValueError in Moving Average Filter with Convolution: {e}", exc_info=True)
+        except Exception as e:
+            print(f"[ERROR] Unexpected error in Moving Average Filter with Convolution: {e}")
+            logging.error(f"Unexpected error in Moving Average Filter with Convolution: {e}", exc_info=True)
 
     def run_runtime_evaluation(self):
-        IF.run_runtime_evaluation(self._model.input_image)
-
+        border_type_ui = "Spiegeln"  # Default border type
+        IF.run_runtime_evaluation(self._model.input_image, border_type_ui)
 
 
