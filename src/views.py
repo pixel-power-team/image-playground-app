@@ -337,7 +337,7 @@ class MainView(QMainWindow):
             kernel_size = self._ui.spinBox_filter_avg_size.value()
             border_type = self.get_selected_border_handling()
             if not border_type:
-                border_type = "Reflect"  # Default to "Reflect" if no edge handling is selected
+                border_type = "Spiegeln"  # Default to "Spiegeln" if no edge handling is selected
             # Apply the moving average filter
             print(f"Applying Moving Average Filter with kernel size: {kernel_size}, border type: {border_type}")
             self._main_controller.apply_moving_avg_filter(kernel_size, border_type)

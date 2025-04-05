@@ -112,7 +112,7 @@ def createGaussianKernel(kSize, sigma=1.0):
     print("Gau\u00df-Kernel erzeugt:\n", kernel)
     return kernel
 
-def applyGaussianFilter(img, kSize=5, sigma=1.0, border_type="Reflect"):
+def applyGaussianFilter(img, kSize=5, sigma=1.0, border_type="Spiegeln"):
     """
     Applies a Gaussian filter using the custom_convolution function.
     This avoids using OpenCV's cv2.filter2D.
@@ -144,7 +144,7 @@ def createSobelYKernel():
     print("Sobel Y Kernel erstellt:\n", kernel)
     return kernel
 
-def applySobelFilter(img, direction="x", border_type_ui="Reflect"):
+def applySobelFilter(img, direction="x", border_type_ui="Spiegeln"):
     """
     Applies the Sobel filter using the custom_convolution function.
     This avoids using OpenCV's cv2.filter2D.
@@ -338,13 +338,13 @@ def applyMovingAverageFilterWithSeperatedKernels(img, kSize):
     return img_blur.astype(np.uint8)
 
 
-def run_runtime_evaluation(img: np.ndarray, border_type_ui="Reflect"):
+def run_runtime_evaluation(img: np.ndarray, border_type_ui="Spiegeln"):
     """
     Evaluates and compares the runtime of different Moving Average filter implementations.
 
     Args:
         img (numpy.ndarray): Image to filter.
-        border_type_ui (str): Border handling method ("Reflect", "Extrapolieren", etc.).
+        border_type_ui (str): Border handling method ("Spiegeln", "Extrapolieren", etc.).
 
     Plots the execution time for different kernel sizes (w).
     """

@@ -120,12 +120,12 @@ class MainController():
     #####################################
     # Übung 3
     #####################################
-# Reflect is the fallback because it works even if the UI choice breaks or something goes wrong.
+# Spiegeln is the fallback because it works even if the UI choice breaks or something goes wrong.
 
     def apply_boarder_handling(self, border_type):
         self._model.image = IF.applyBorderHandling(self._model.input_image, border_type)
 
-    def apply_gaussian_filter(self, kernel_size, border_type_ui="Reflect"):
+    def apply_gaussian_filter(self, kernel_size, border_type_ui="Spiegeln"):
         print(f"[DEBUG] Applying Gaussian Filter with edge handling: {border_type_ui}")
         # Convert the image to grayscale
         grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
@@ -139,7 +139,7 @@ class MainController():
         # Convert the filtered image back to 3-channel RGB for display
         self._model.image = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2RGB)
 
-    def apply_moving_avg_filter(self, kernel_size, border_type_ui="Reflect"):
+    def apply_moving_avg_filter(self, kernel_size, border_type_ui="Spiegeln"):
         try:
             if kernel_size % 2 == 0:
                 print("[WARNING] Kernel size must be an odd number. Please use an odd value.")
@@ -193,7 +193,7 @@ class MainController():
             logging.error(f"Error applying Moving Average Filter with Separated Kernels: {e}", exc_info=True)
             raise
 
-    def apply_median_filter(self, kernel_size, border_type_ui="Reflect"):
+    def apply_median_filter(self, kernel_size, border_type_ui="Spiegeln"):
         # Check if the kernel size is even
         if kernel_size % 2 == 0:
             print("[WARNING] Kernel size must be an odd number. Please use an odd value.")
@@ -208,7 +208,7 @@ class MainController():
         # Convert the filtered image back to 3-channel RGB for display
         self._model.image = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2RGB)
 
-    def apply_filter_sobelX(self, border_type_ui="Reflect"):
+    def apply_filter_sobelX(self, border_type_ui="Spiegeln"):
         print(f"[DEBUG] Applying Sobel X Filter with edge handling: {border_type_ui}")
         # Convert the image to grayscale
         grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
@@ -222,7 +222,7 @@ class MainController():
         # Convert the normalized image back to 3-channel RGB for display
         self._model.image = cv2.cvtColor(normalized_img, cv2.COLOR_GRAY2RGB)
 
-    def apply_filter_sobelY(self, border_type_ui="Reflect"):
+    def apply_filter_sobelY(self, border_type_ui="Spiegeln"):
         print(f"[DEBUG] Applying Sobel Y Filter with edge handling: {border_type_ui}")
         # Convert the image to grayscale
         grayscale_image = cv2.cvtColor(self._model.image, cv2.COLOR_RGB2GRAY)
@@ -284,7 +284,7 @@ class MainController():
             logging.error(f"Unexpected error in Moving Average Filter with Convolution: {e}", exc_info=True)
 
     def run_runtime_evaluation(self):
-        border_type_ui = "Reflect"  # Default border type
+        border_type_ui = "Spiegeln"  # Default border type
         IF.run_runtime_evaluation(self._model.input_image, border_type_ui)
 
 
