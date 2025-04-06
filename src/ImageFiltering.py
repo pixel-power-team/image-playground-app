@@ -240,7 +240,7 @@ def createIntegralImage(img: np.ndarray):
     return integral_image
 
 # Extra: apply the moving average filter by using an integral image
-def applyMovingAverageFilterWithIntegralImage(img: np.ndarray, kSize: int):
+def applyMovingAverageFilterWithIntegralImage(img: np.ndarray, kSize: int, integral_image = None):
     """
     Applies a moving average filter using an integral image for efficiency.
 
@@ -251,15 +251,16 @@ def applyMovingAverageFilterWithIntegralImage(img: np.ndarray, kSize: int):
     Returns:
         numpy.ndarray: Filtered image.
     """
-    img = Utilities.ensure_one_channel_grayscale_image(img)
-
     # Ensure kSize is odd to have a centered kernel
     if kSize % 2 == 0:
         raise ValueError("Kernel size must be odd.")
 
-    # Compute the integral image
-    integral_image = createIntegralImage(img)
-
+    # Custom implementation of the integral image works and is implemented, but is much slower than
+    # the numpy implementation.
+    # integral_image = createIntegralImage(img)
+    if integral_image is None:
+        img = Utilities.ensure_one_channel_grayscale_image(img)
+        integral_image = img.cumsum(axis=0).cumsum(axis=1).astype(np.float32)
     # Determine padding size
     # floor division e.g. kSize = 3, pad = 1
     pad = kSize // 2  # Half of kernel size 
@@ -268,7 +269,7 @@ def applyMovingAverageFilterWithIntegralImage(img: np.ndarray, kSize: int):
     h, w = img.shape
 
     # Create output image
-    filtered_img = np.zeros_like(img, dtype=np.float32)
+    filtered_img = np.empty_like(img, dtype=np.float32)
 
     # Compute the moving average using the integral image
     for i in range(h):
@@ -294,7 +295,7 @@ def applyMovingAverageFilterWithIntegralImage(img: np.ndarray, kSize: int):
             num_pixels = (x2 - x1 + 1) * (y2 - y1 + 1) # Number of pixels in the window
             filtered_img[i, j] = region_sum / num_pixels # Compute the mean
 
-    return filtered_img.astype(np.uint8)  # Convert back to uint8
+    return np.clip(filtered_img, 0, 255).astype(np.uint8)
 
 # Extra:
 # 1D convolution along rows and columns
@@ -304,39 +305,46 @@ def applyMovingAverageFilterWithSeperatedKernels(img, kSize):
 
     Args:
         img (numpy.ndarray): Image to filter.
-        kSize (int): Kernel size (w x w).
+        kSize (int): Kernel size (w x w), must be odd.
 
     Returns:
-        numpy.ndarray: Filtered image.
+        numpy.ndarray: Filtered image (dtype=np.uint8)
     """
     img = Utilities.ensure_one_channel_grayscale_image(img)
 
-    # Ensure kSize is odd to keep symmetry
     if kSize % 2 == 0:
         raise ValueError("Kernel size must be odd.")
 
-    # Step 1: Apply 1D convolution along rows (horizontal pass)
-    img_horiz = np.zeros_like(img, dtype=np.float32)
     pad = kSize // 2
     h, w = img.shape
 
-    # Every pixel in the horizontal pass is the mean of a row slice
+    img_horiz = np.empty_like(img, dtype=np.float32)
+    img_blur = np.empty_like(img, dtype=np.float32)
+
+    # Sliding Window Mittelwert – horizontal
     for i in range(h):
+        row = img[i]
+        cumsum = np.cumsum(np.insert(row, 0, 0))  # cumsum[j] = sum(row[0] .. row[j-1])
         for j in range(w):
-            x1, x2 = max(0, j - pad), min(w - 1, j + pad) # Slice boundaries
-            img_horiz[i, j] = np.mean(img[i, x1:x2 + 1])  # Mean of row slice
+            left = max(0, j - pad)
+            right = min(w - 1, j + pad)
+            total = cumsum[right + 1] - cumsum[left]
+            count = right - left + 1
+            img_horiz[i, j] = total / count
 
-    # Step 2: Apply 1D convolution along columns (vertical pass)
-    img_blur = np.zeros_like(img_horiz, dtype=np.float32)
-
+    # Sliding Window Mittelwert – vertikal
     for j in range(w):
+        col = img_horiz[:, j]
+        cumsum = np.cumsum(np.insert(col, 0, 0))
         for i in range(h):
-            y1, y2 = max(0, i - pad), min(h - 1, i + pad)
-            img_blur[i, j] = np.mean(
-                img_horiz[y1:y2 + 1, j])  # Mean of column slice
+            top = max(0, i - pad)
+            bottom = min(h - 1, i + pad)
+            total = cumsum[bottom + 1] - cumsum[top]
+            count = bottom - top + 1
+            img_blur[i, j] = total / count
 
-    return img_blur.astype(np.uint8)
-
+    # Wertebereich absichern, bevor zu uint8 konvertiert wird
+    return np.clip(img_blur, 0, 255).astype(np.uint8)
 
 def run_runtime_evaluation(img: np.ndarray, border_type_ui="Spiegeln"):
     """
@@ -348,29 +356,38 @@ def run_runtime_evaluation(img: np.ndarray, border_type_ui="Spiegeln"):
 
     Plots the execution time for different kernel sizes (w).
     """
+    repeats = 5  # Anzahl Wiederholungen pro Messung um aussagekräftig zu sein
     # (start=3, stop=16, step=2) => w = 3, 5, 7, ..., 15
-    kernel_sizes = list(range(3, 16, 2))
+    kernel_sizes = list(range(3, 512, 32))
+
+    img = Utilities.ensure_one_channel_grayscale_image(img)
+    integral_image = img.cumsum(axis=0).cumsum(axis=1).astype(np.float32)
+
     methods = {
-        "Naive Convolution": lambda img, w: applyKernelInSpatialDomain(img, w, border_type_ui),
-        "Separable Kernels": applyMovingAverageFilterWithSeperatedKernels,
-        "Integral Image": applyMovingAverageFilterWithIntegralImage
+        "Naive Convolution": lambda img, w: applyKernelInSpatialDomain(img, w, border_type_ui), # O(w^2)
+        "Separable Kernels": applyMovingAverageFilterWithSeperatedKernels, # O(w)
+        "Integral Image": lambda img, w: applyMovingAverageFilterWithIntegralImage(img, w, integral_image), # O(1)
     }
 
     runtimes = {method: [] for method in methods}
 
     for w in kernel_sizes:
-        for method_name, method in methods.items():  # Iterate over the methods
-            start_time = time.perf_counter()  # Start the timer
-            method(img, w)  # Apply the filter
-            end_time = time.perf_counter()  # Stop the timer
-
-            runtime = end_time - start_time  # Compute the runtime
-            runtimes[method_name].append(runtime)
+        for method_name, method in methods.items():
+            times = []
+            for _ in range(repeats):
+                start_time = time.perf_counter()
+                method(img, w)
+                end_time = time.perf_counter()
+                times.append(end_time - start_time)
+            avg_time = sum(times) / len(times)
+            runtimes[method_name].append(avg_time)
 
     # Plot the results
     plt.figure(figsize=(8, 6))
     for method_name, times in runtimes.items():
         plt.plot(kernel_sizes, times, marker='o', label=method_name)
+
+    #plt.yscale('log')  # Optional: besser für wachsende Komplexität sichtbar
 
     plt.xlabel("Kernel Size (w)")
     plt.ylabel("Execution Time (seconds)")
