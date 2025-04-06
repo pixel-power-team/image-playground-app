@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QThread, QTimer, QRegularExpression
 from PyQt6.QtWidgets import QMainWindow, QWidget, QPushButton, QVBoxLayout, QApplication, QSlider
@@ -6,6 +7,7 @@ from PyQt6.QtGui import QPixmap, QColor, QRegularExpressionValidator
 import logging
 from loggers import LogEmitter
 import models
+import ImageFiltering as IF  # Import the ImageFiltering module
 
 
 import sys
@@ -17,6 +19,7 @@ from PyQt6.QtCore import pyqtSignal, pyqtSlot
 
 
 from PyQt6.QtWidgets import QMainWindow, QFileDialog
+from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtCore import pyqtSlot, QObject
 
 
@@ -34,21 +37,24 @@ class MainView(QMainWindow):
         self.update_image()
         self.update_input_image()
 
+        # Clear existing items in the dropdown to avoid duplicates
+        # This ensures that the dropdown is reset before adding new items.
+        self._ui.comboBox_border_handling.clear()
 
+        # Initialize edge handling dropdown with localized terms
+        # These terms ("Extrapolieren", "Spiegeln", etc.) are user-friendly and correspond to the edge handling methods.
+        valid_methods = [
+            ("Extrapolieren", "Extrapolieren"),
+            ("Spiegeln", "Spiegeln"),
+            ("Zyklisch", "Zyklisch"),
+            ("Nullen", "Nullen")
+        ]
+        # Add each method to the dropdown menu
+        for display_text, method in valid_methods:
+            self._ui.comboBox_border_handling.addItem(display_text, method)
+        self._ui.comboBox_border_handling.setCurrentIndex(0)  # Default to the first method
 
         self._ui.widget_histogram.controller = self._main_controller
-
-
-        ####################
-        # Input validators
-        ####################
-        # Create a regular expression that matches integer values between 1 and infinity
-        regex = QRegularExpression("[1-9][0-9]*")
-        # Create a validator based on the regular expression
-        validator = QRegularExpressionValidator(regex)
-        # Set the validator for the line edit widget
-        self._ui.lineEdit_image_height.setValidator(validator)
-        self._ui.lineEdit_image_width.setValidator(validator)
 
 
         ####################################################################
@@ -94,7 +100,6 @@ class MainView(QMainWindow):
         self._ui.pushButton_filter_evaluation.clicked.connect(self.on_runtime_evaluation_button_clicked)
         self._ui.pushButton_filter_movAvg_sep.clicked.connect(self.on_filter_moving_avg_sep_button_clicked)
         self._ui.pushButton_filter_movAvg_conv.clicked.connect(self.on_filter_moving_avg_conv_button_clicked)
-
 
         ####################################################################
         #   listen for model event signals
@@ -212,9 +217,12 @@ class MainView(QMainWindow):
     def update_image(self):
         frame = self._model.image
         size = self._ui.label_output_image.size()
-        #qt_img = convert_cv_qt(frame, size.width(), size.height())
+
+        # Ensure the image has 3 channels before converting to QPixmap
+        if len(frame.shape) == 2:  # Grayscale image
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
+
         qt_img = convert_cv2scaledqt(frame, size.width(), size.height())
-        #self._ui.label_output_image.loadImage(qt_img)
         self._ui.label_output_image.setPixmap(qt_img)
 
     def update_input_image(self):
@@ -283,52 +291,108 @@ class MainView(QMainWindow):
     #####################
     # Übung 3
     #####################
+    def get_selected_border_handling(self):
+        """Returns the selected edge handling method from the dropdown."""
+        selected_method = self._ui.comboBox_border_handling.currentText()  # Get the selected text
+        print(f"[DEBUG] Selected border handling method: {selected_method}")
+        return selected_method
 
     def on_filter_sobelX_button_clicked(self):
-        self._main_controller.apply_filter_sobelX()
-        self.on_image_changed()
+        try:
+            border_type = self.get_selected_border_handling()
+            print(f"Applying Sobel X Filter with border type: {border_type}")
+            self._main_controller.apply_filter_sobelX(border_type)
+            self.on_image_changed()
+        except Exception as e:
+            print(f"Error in Sobel X Filter: {e}")
+            logging.error(f"Error in Sobel X Filter: {e}", exc_info=True)
 
     def on_filter_sobelY_button_clicked(self):
-        self._main_controller.apply_filter_sobelY()
-        self.on_image_changed()
+        try:
+            border_type = self.get_selected_border_handling()
+            print(f"Applying Sobel Y Filter with border type: {border_type}")
+            self._main_controller.apply_filter_sobelY(border_type)
+            self.on_image_changed()
+        except Exception as e:
+            print(f"Error in Sobel Y Filter: {e}")
+            logging.error(f"Error in Sobel Y Filter: {e}", exc_info=True)
 
     def on_filter_gauss_button_clicked(self):
-        self._main_controller.apply_gaussian_filter(self._ui.spinBox_filter_avg_size.value())
-        self.on_image_changed()
+        try:
+            # Retrieve kernel size and edge handling method
+            kernel_size = self._ui.spinBox_filter_avg_size.value()
+            border_type = self.get_selected_border_handling()
+
+            # Apply the Gaussian filter
+            print(f"Applying Gaussian Filter with kernel size: {kernel_size}, border type: {border_type}")
+            self._main_controller.apply_gaussian_filter(kernel_size, border_type)
+            self.on_image_changed()
+        except Exception as e:
+            print(f"Error in Gaussian Filter: {e}")
+            logging.error(f"Error in Gaussian Filter: {e}", exc_info=True)
 
     def on_filter_moving_avg_button_clicked(self):
-        self._main_controller.apply_moving_avg_filter(self._ui.spinBox_filter_avg_size.value())
-        self.on_image_changed()
+        try:
+            # Retrieve kernel size and edge handling method
+            kernel_size = self._ui.spinBox_filter_avg_size.value()
+            border_type = self.get_selected_border_handling()
+            if not border_type:
+                border_type = "Spiegeln"  # Default to "Spiegeln" if no edge handling is selected
+            # Apply the moving average filter
+            print(f"Applying Moving Average Filter with kernel size: {kernel_size}, border type: {border_type}")
+            self._main_controller.apply_moving_avg_filter(kernel_size, border_type)
+            self.on_image_changed()
+        except Exception as e:
+            print(f"Error in Moving Average Filter: {e}")
+            logging.error(f"Error in Moving Average Filter: {e}", exc_info=True)
 
     def on_filter_moving_avg_integral_button_clicked(self):
         self._main_controller.apply_moving_avg_filter_integral(self._ui.spinBox_filter_avg_size.value())
         self.on_image_changed()
 
     def on_filter_median_button_clicked(self):
-        self._main_controller.apply_median_filter(self._ui.spinBox_filter_avg_size.value())
+        border_type = self.get_selected_border_handling()
+        self._main_controller.apply_median_filter(self._ui.spinBox_filter_avg_size.value(), border_type)
         self.on_image_changed()
 
     def on_runtime_evaluation_button_clicked(self):
         self._main_controller.run_runtime_evaluation()
-        
+    
     def on_filter_moving_avg_sep_button_clicked(self):
         self._main_controller.apply_moving_avg_filter_separated(self._ui.spinBox_filter_avg_size.value())
         self.on_image_changed()
-        
-    def on_filter_moving_avg_conv_button_clicked(self):
-        self._main_controller.apply_moving_avg_filter_convolution(self._ui.spinBox_filter_avg_size.value())
-        self.on_image_changed()
 
+    def on_filter_moving_avg_conv_button_clicked(self):
+        """
+        Handles the button click for applying the moving average filter using manual convolution.
+        Retrieves the kernel size and border type from the UI and passes them to the controller.
+        """
+        try:
+            # Retrieve kernel size and border type from the UI
+            kernel_size = self._ui.spinBox_filter_avg_size.value()
+            border_type = self.get_selected_border_handling()
+
+            print(f"[DEBUG] Applying Moving Average Filter with Convolution: kernel_size={kernel_size}, border_type={border_type}")
+            self._main_controller.apply_moving_avg_filter_convolution(kernel_size, border_type)
+            self.on_image_changed()
+        except Exception as e:
+            print(f"[ERROR] Error in Moving Average Filter with Convolution: {e}")
+            logging.error(f"Error in Moving Average Filter with Convolution: {e}", exc_info=True)
+        
 def convert_cv_qt(cv_img, display_width, display_height):
     """Convert from an opencv image to QPixmap"""
     h, w, ch = cv_img.shape
     bytes_per_line = ch * w
     convert_to_Qt_format = QtGui.QImage(cv_img.data, w, h, bytes_per_line, QtGui.QImage.Format.Format_RGB888)
     p = convert_to_Qt_format.scaled(display_width, display_height, Qt.AspectRatioMode.KeepAspectRatio)
-    return QPixmap.fromImage(convert_to_Qt_format)
+    return QPixmap.fromImage(p)
 
 def convert_cv2scaledqt(cv_img, display_width, display_height):
-    """Convert from an opencv image to QPixmap"""
+    """Convert from an OpenCV image to QPixmap"""
+    # Ensure the image has 3 channels before processing
+    if len(cv_img.shape) == 2:  # Grayscale image
+        cv_img = cv2.cvtColor(cv_img, cv2.COLOR_GRAY2RGB)
+
     h, w, ch = cv_img.shape
     bytes_per_line = ch * w
     convert_to_Qt_format = QtGui.QImage(cv_img.data, w, h, bytes_per_line, QtGui.QImage.Format.Format_RGB888)
